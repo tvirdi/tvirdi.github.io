@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neural Style Transfer</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
+
+  <!-- Font -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed for twopointseven" href="/feed.xml" />
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>Neural Style Transfer | twopointseven.github.io</title>
+<meta property="og:title" content="Neural Style Transfer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this blog post, we review neural style transfer and how it has advanced in the last few years." />
+<meta property="og:description" content="In this blog post, we review neural style transfer and how it has advanced in the last few years." />
+<link rel="canonical" href="http://localhost:4000/2017-11-30/style/" />
+<meta property="og:url" content="http://localhost:4000/2017-11-30/style/" />
+<meta property="og:site_name" content="twopointseven.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-30T00:00:00-08:00" />
+<script type="application/ld+json">
+{"name":null,"description":"In this blog post, we review neural style transfer and how it has advanced in the last few years.","author":null,"@type":"BlogPosting","url":"http://localhost:4000/2017-11-30/style/","image":null,"publisher":null,"headline":"Neural Style Transfer","dateModified":"2017-11-30T00:00:00-08:00","datePublished":"2017-11-30T00:00:00-08:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017-11-30/style/"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+
+  <!-- Google Analytics -->
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', '', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+
+
+</head>
+
+<body>
+  <div class="content-container">
+    <header>
+  <div class="header-small">
+    <a href="http://localhost:4000">twopointseven</a>
+  </div>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<div class="post">
+  <div class="post-title">Neural Style Transfer</div>
+  <span class="post-date">
+    <time>30 Nov 2017</time>
+  </span>
+  <div class="post-tag">
+    <ul>
+      
+    </ul>
+  </div>
+
+  <p><strong>November 30th 2017</strong> - John Guibas &amp; Tejpal Virdi</p>
+
+<h3 id="introduction">Introduction</h3>
+<p>Style transfer involves takes a style image representing style and a content image and outputting an image that has the style of the first and the content of the second. This may seem trivial for human intelligence but is difficult for machine intelligence. However, in August 2015, Gatys et al. showed impressive results with their architecture for style transfer. Most notably, they were able to extract two principal feature sets from an input image: style and content.
+As we saw in the post on Convolutional Neural Networks, the network identifies certain feature maps after each layer. Specifically, we saw that early layers in the network would learn edges and corners while the layers toward the end of the network would learn high-level features such as an entire outline of an object.</p>
+
+<p><img src="/images/visfilters.jpg" alt="Filters" class="center-image" height="255px" width="242px" /></p>
+
+<p>By using a network pre-trained (VGG-19 is commonly used) on a large and varied dataset such as ImageNet, we can simply pass our style and content image through and get accurate depictions of style and content. Specifically, as seen in the figure above, activations of later layers give accurate representations of the content while style can be found in activations from the beginning layers. This is known as reconstruction where we reconstruct a stylized image given a lower representation. These lower representation are forced into the reconstructed image and appear as if the network has learned a semantic representation of the content and style images.</p>
+
+<p>To create an image that contains the style and content, we must incorporate it into the loss function. Meaning, the generated image should minimize loss when comparing to both the style activation and the content activation. Here are some famous examples using the Mona Lisa as a base image:</p>
+
+<p><img src="/images/mona.jpg" alt="Filters" class="center-image" height="256px" width="514px" /></p>
+
+<p>Mathematically, we want to do the following:</p>
+
+<p>The content image is the feature map at certain early layers after passing our input image through VGG-19. We express a feature map in terms of the input X and a layer C as FXC</p>
+
+<p>Minimizing content loss (mean-squared error):</p>
+
+<script type="math/tex; mode=display">| F_{XL}  - F_{YL}|^{2}</script>
+
+<p>Minimizing style loss (mean-squared error):
+The style of an input X at layer C is calculated by multiplying certain vectorized feature maps in a certain interval of the network. Given K feature maps, the output Gram matrix of the multiplication is KxK. This is what we will use as our style image when computing loss.</p>
+
+<script type="math/tex; mode=display">L_{total} = \alpha * L_{style} + \beta * L_{content}</script>
+
+<p>The interesting part of this new loss function is that instead of doing a per-pixel loss, we are now comparing it to perceptual, higher-level differences.</p>
+
+<p><img src="/images/nstyle.jpg" alt="Filters" class="center-image" height="561px" width="993px" /></p>
+
+<h3 id="real-time-style-transfer">Real-Time Style Transfer</h3>
+
+<p>The approach described above aims to solve an optimization problem by performing gradient descent on the loss defined by both style and content features. However, the training time prevents from real-time application of this technology. On a CPU, a 256x256 image takes ~2 hours. Also, this method requires hyperparameter searching when training. Instead, we can pre-train a network to learn a style and then apply that style to a content image, allowing for real-time style transfer. Similar to what we saw with SRGAN, we will utilize a perceptual loss (Johnson et al.). Perceptual loss is based on comparing outputs to high-level features extracted from pretrained networks, specifically the VGG-19. This loss encourages the network to have similar features rather than exact pixel values to the original image. Although this may not perform well quantitatively, the sharper details from the use of a perceptual loss result in a qualitatively superior output. With this, only a single pass of the content image through our image transformation network is needed to do style transfer.</p>
+
+<p>Code for Style Transfer in PyTorch <a href="http://pytorch.org/tutorials/advanced/neural_style_tutorial.html">here</a></p>
+
+
+
+  <!-- Disqus -->
+  
+  <div class="post-disqus">
+      <section id="disqus_thread"></section>
+      <script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables */
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//twopointseven.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  </div>
+  
+
+</div>
+
+
+    <!-- Documents about icons are here: http://fontawesome.io/icons/ -->
+<div class="footer">
+  <hr />
+  <div class="footer-link">
+    
+	
+	
+	
+	
+
+    
+
+    
+	
+	
+	
+	
+
+    
+	
+	
+	
+	
+	
+	
+	
+	
+
+    
+
+    
+
+    
+    <a href="mailto:tejpalv8@gmail.com,jtgg01@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></i></a>
+    
+
+  </div>
+  © 2017 twopointseven. All rights reserved.
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+</body>
+</html>
+

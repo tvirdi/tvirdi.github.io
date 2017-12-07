@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convolutional Neural Networks Explained</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
+
+  <!-- Font -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed for twopointseven" href="/feed.xml" />
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>Convolutional Neural Networks Explained | twopointseven.github.io</title>
+<meta property="og:title" content="Convolutional Neural Networks Explained" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="We explore the convolutional neural network: a network that excel at image recognition and classification." />
+<meta property="og:description" content="We explore the convolutional neural network: a network that excel at image recognition and classification." />
+<link rel="canonical" href="http://localhost:4000/2017-11-09/cnn/" />
+<meta property="og:url" content="http://localhost:4000/2017-11-09/cnn/" />
+<meta property="og:site_name" content="twopointseven.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-09T00:00:00-08:00" />
+<script type="application/ld+json">
+{"name":null,"description":"We explore the convolutional neural network: a network that excel at image recognition and classification.","author":null,"@type":"BlogPosting","url":"http://localhost:4000/2017-11-09/cnn/","image":null,"publisher":null,"headline":"Convolutional Neural Networks Explained","dateModified":"2017-11-09T00:00:00-08:00","datePublished":"2017-11-09T00:00:00-08:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017-11-09/cnn/"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+
+  <!-- Google Analytics -->
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', '', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+
+
+</head>
+
+<body>
+  <div class="content-container">
+    <header>
+  <div class="header-small">
+    <a href="http://localhost:4000">twopointseven</a>
+  </div>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<div class="post">
+  <div class="post-title">Convolutional Neural Networks Explained</div>
+  <span class="post-date">
+    <time>09 Nov 2017</time>
+  </span>
+  <div class="post-tag">
+    <ul>
+      
+    </ul>
+  </div>
+
+  <p><strong>November 9th 2017</strong> - John Guibas &amp; Tejpal Virdi</p>
+
+<p>Convolutional Neural Networks (CNNs) are a certain type of Neural Network that excel at image recognition and classification. They are used to analyze an image through the extraction of relevant features and have special characteristics that allow it to perform better on 3D and 2D volumes of data. Through a series of layers, the CNN extracts relevant features from the input image. The four main layers are known as convolutional layers, ReLUs, pooling layers, and fully-connected layers. Just as how an artificial neural network can have multiple hidden layers, a deep CNN may repeat these layers multiple times.</p>
+
+<p>If you are new to neural networks in general, we recommend that you visit our introductory blog post first.</p>
+
+<p><img src="/images/features.png" alt="Filters" class="center-image" height="290px" width="622px" /></p>
+
+<h3 id="convolutional-layer">Convolutional Layer</h3>
+<p>The Convolutional Layer is the meat of the whole process. Similar to the neural network, the convolution layer has a set of learnable weights, called filters. The filter is usually of a size smaller than 10x10 pixels and slides across the image, computing the dot product between the input pixels and filter. The resulting matrix is known as an activation map and can be stacked spatially to produce the output volume.</p>
+
+<p>Here are some important terms to know: the size of the filter is often known as the kernel size, stride refers to how many units the filter moves every iteration of the convolution, and padding refers to the zeros you add around the image so the filter can be applied onto pixels nearing the edges of the image.</p>
+
+<p>For image recognition, the filters learned usually represent lower to higher spatial features. For example, filters in the first convolution might represent edges or corners. Through the combination of these lower level filters, filters in later convolutions are able to take this information and look for higher level features such as faces.</p>
+
+<p><img src="/images/FILTER.png" alt="image-title-here" class="center-image" height="339px" width="819" /></p>
+
+<h3 id="relu">ReLU</h3>
+<p>Rectified Linear Units (ReLUs) serve as activation functions, and are simply defined as:</p>
+
+<script type="math/tex; mode=display">f(x) = max(0, x)</script>
+
+<p>The simplicity of this function allows for improved training speed, in both the forward and backward passes. Observe that computing the gradient of the function simply returns a 0 or 1, only dependent on sign of x. In comparison, logistic and hyperbolic activation functions, such as the sigmoid function, are prone to the vanishing gradient problem. The vanishing gradient problem is based on the gradients having an infinitesimal effect on the output. A local minimum of the loss function is found and the small changes of the gradients prevents the model from learning. However, ReLUs are not subject to this since their derivatives are simply 0 or 1.</p>
+
+<p><img src="/images/relu.png" alt="image-title-here" class="center-image" height="336px" width="897px" /></p>
+
+<h3 id="pooling-layer">Pooling Layer</h3>
+
+<p>To understand an image, the CNN must downsample it to include only relevant information. Pooling layers are used to reduce the spatial size, thus reducing the total number of parameters of the model. This lowers computation time and prevents overfitting since the output of the pooling layer is a more general representation of the input.</p>
+
+<p>A simple type of pooling is max pooling, which applies a filter of size, let’s say, 2x2 across the image. For every 2x2 set of pixels on the input, it will only keep the maximum pixel value and remove the rest, thus downsampling the image by 4x in our example. Note: this filter preserves depth to keep an accurate spatial representation of the input.</p>
+
+<p><img src="/images/maxpool.png" alt="image-title-here" class="center-image" height="231px" width="430px" /></p>
+
+<h3 id="fully-connected-layer">Fully-Connected Layer</h3>
+<p>Fully-connected layers are used at the end of the model as a nonlinear transformation, by a simple matrix multiplication, to go back from activation maps to relevant high-dimensional data. The channels of information are flattened, and their spatial representation is lost. It is important to note that a fully-connected layer is the same thing as performing a convolutional layer with the kernel size as the size of the image.</p>
+
+<h3 id="forward-pass">Forward Pass</h3>
+
+<p><img src="/images/network.png" alt="image-title-here" class="center-image" height="294px" width="816px" />
+The forward pass simply involves running the input image through each of the filters, pooling layers, and ReLU’s.</p>
+
+<h3 id="backpropagation">Backpropagation</h3>
+
+<p>In the case of CNNs, backpropagation is used to make adjustments to the filters in order to get a lower loss. It is calculated similarly to  the artificial neural network, however it accounts for the addition of filters. (see blog post on simple neural networks, more math explained there)</p>
+
+<h3 id="current-architectures">Current Architectures</h3>
+<p>Within the last few years, many new CNN architectures have come out. It’s helpful to be familiar with them since you will most likely encounter them in practice. We will briefly look at AlexNet, VGGNet, and ResNet.</p>
+
+<p>AlexNet became popular after its submission to the annual ImageNet ILSVRC competition in 2012. It’s key features are its significant depth as well as its use of stacked convolutional layers without pooling after each one.</p>
+
+<p>The VGGNet showcased the importance of depth in a CNN architecture. The model contained 16 convolutional and fully-connected layers with convolutions of size 3x3 and 2x2 for pooling. However, due to the depth and large number of fully-connected layers, the net ended up having over 140 million parameters, making it computationally expensive in terms of both memory and time.</p>
+
+<p>The ResNet is a residual network that removes many of the drawbacks of the VGGNet, being extremely efficient through the use of skip connections, absence of fully-connected layers, and significant use of batch normalization. A skip architecture is where the network gives the output of a layer to the next layer as well as the one after it, thus skipping to the next connection. Batch normalization is a used to normalize the distribution of the input across the batch. It scales and shifts this distribution, allowing for a more stable training process. This also allows for a higher learning late without getting stuck in a local minimum of the loss function.</p>
+
+<h2 id="code">Code</h2>
+
+<h5 id="full-implementation-httpsgithubcomjohnguibascnn-pytorch">Full Implementation: <a href="https://github.com/johnguibas/cnn-pytorch">https://github.com/johnguibas/cnn-pytorch</a></h5>
+
+<h5 id="imports">Imports</h5>
+<script src="https://gist.github.com/johnguibas/ccce30c5f685f00e1f935a3b3b4dea1a.js"></script>
+
+<h5 id="hyperparameters">Hyperparameters</h5>
+<script src="https://gist.github.com/johnguibas/0c72bd7bd74f6692376dd26055abdc44.js"></script>
+
+<h5 id="load-data">Load Data</h5>
+<script src="https://gist.github.com/johnguibas/019b17b1325fc87a77ecf56c43e40850.js"></script>
+
+<h5 id="architecture-and-forward-pass">Architecture and Forward Pass</h5>
+<script src="https://gist.github.com/johnguibas/27165cc2da9cde610cc89f0c0e15bd66.js"></script>
+
+<h5 id="loss-and-optimizer">Loss and Optimizer</h5>
+<script src="https://gist.github.com/johnguibas/f5ec355ac2301ff32dad55bfabb7b083.js"></script>
+
+<h5 id="training">Training</h5>
+<script src="https://gist.github.com/johnguibas/c92f01c3c498b203680eb657deb13988.js"></script>
+
+<h5 id="testing">Testing</h5>
+<script src="https://gist.github.com/johnguibas/5817b7a14e234365aff273b63c5e3488.js"></script>
+
+
+
+  <!-- Disqus -->
+  
+  <div class="post-disqus">
+      <section id="disqus_thread"></section>
+      <script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables */
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//twopointseven.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  </div>
+  
+
+</div>
+
+
+    <!-- Documents about icons are here: http://fontawesome.io/icons/ -->
+<div class="footer">
+  <hr />
+  <div class="footer-link">
+    
+	
+	
+	
+	
+
+    
+
+    
+	
+	
+	
+	
+
+    
+	
+	
+	
+	
+	
+	
+	
+	
+
+    
+
+    
+
+    
+    <a href="mailto:tejpalv8@gmail.com,jtgg01@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></i></a>
+    
+
+  </div>
+  © 2017 twopointseven. All rights reserved.
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+</body>
+</html>
+

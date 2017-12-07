@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>twopointseven</title>
+    <link>http://localhost:4000</link>
+    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
+    
+      <item>
+        <title>Neural Style Transfer</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 30th 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;Style transfer involves takes a style image representing style and a content image and outputting an image that has the style of the first and the content of the second. This may seem trivial for human intelligence but is difficult for machine intelligence. However, in August 2015, Gatys et al. showed impressive results with their architecture for style transfer. Most notably, they were able to extract two principal feature sets from an input image: style and content.
+As we saw in the post on Convolutional Neural Networks, the network identifies certain feature maps after each layer. Specifically, we saw that early layers in the network would learn edges and corners while the layers toward the end of the network would learn high-level features such as an entire outline of an object.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/visfilters.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;255px&quot; width=&quot;242px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;By using a network pre-trained (VGG-19 is commonly used) on a large and varied dataset such as ImageNet, we can simply pass our style and content image through and get accurate depictions of style and content. Specifically, as seen in the figure above, activations of later layers give accurate representations of the content while style can be found in activations from the beginning layers. This is known as reconstruction where we reconstruct a stylized image given a lower representation. These lower representation are forced into the reconstructed image and appear as if the network has learned a semantic representation of the content and style images.&lt;/p&gt;
+
+&lt;p&gt;To create an image that contains the style and content, we must incorporate it into the loss function. Meaning, the generated image should minimize loss when comparing to both the style activation and the content activation. Here are some famous examples using the Mona Lisa as a base image:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/mona.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;256px&quot; width=&quot;514px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Mathematically, we want to do the following:&lt;/p&gt;
+
+&lt;p&gt;The content image is the feature map at certain early layers after passing our input image through VGG-19. We express a feature map in terms of the input X and a layer C as FXC&lt;/p&gt;
+
+&lt;p&gt;Minimizing content loss (mean-squared error):&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;| F_{XL}  - F_{YL}|^{2}&lt;/script&gt;
+
+&lt;p&gt;Minimizing style loss (mean-squared error):
+The style of an input X at layer C is calculated by multiplying certain vectorized feature maps in a certain interval of the network. Given K feature maps, the output Gram matrix of the multiplication is KxK. This is what we will use as our style image when computing loss.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;L_{total} = \alpha * L_{style} + \beta * L_{content}&lt;/script&gt;
+
+&lt;p&gt;The interesting part of this new loss function is that instead of doing a per-pixel loss, we are now comparing it to perceptual, higher-level differences.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/nstyle.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;561px&quot; width=&quot;993px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;real-time-style-transfer&quot;&gt;Real-Time Style Transfer&lt;/h3&gt;
+
+&lt;p&gt;The approach described above aims to solve an optimization problem by performing gradient descent on the loss defined by both style and content features. However, the training time prevents from real-time application of this technology. On a CPU, a 256x256 image takes ~2 hours. Also, this method requires hyperparameter searching when training. Instead, we can pre-train a network to learn a style and then apply that style to a content image, allowing for real-time style transfer. Similar to what we saw with SRGAN, we will utilize a perceptual loss (Johnson et al.). Perceptual loss is based on comparing outputs to high-level features extracted from pretrained networks, specifically the VGG-19. This loss encourages the network to have similar features rather than exact pixel values to the original image. Although this may not perform well quantitatively, the sharper details from the use of a perceptual loss result in a qualitatively superior output. With this, only a single pass of the content image through our image transformation network is needed to do style transfer.&lt;/p&gt;
+
+&lt;p&gt;Code for Style Transfer in PyTorch &lt;a href=&quot;http://pytorch.org/tutorials/advanced/neural_style_tutorial.html&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Thu, 30 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-30/style/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-30/style/</guid>
+      </item>
+    
+      <item>
+        <title>Towards an Autonomous Car using Computer Vision</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 21st 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;The use of Deep Learning in autonomous cars has made profound improvements in the last few years. Computer Vision techniques have allowed us to pull down the hefty price of autonomous cars by using 2d cameras, rather than lidars or other complex sensors. In this blog post, we will look into two of the most important tasks in this domain: vehicle detection and depth estimation.&lt;/p&gt;
+
+&lt;p&gt;Semantic segmentation or detection involves partitioning an image into objects that are significant. This task has been heavily explored in Deep Learning with various architectures and datasets. Convolutional Neural Networks are unable to do this due to their pooling layers. Pooling compromises spatial representation, a necessary feature for segmentation since the location of the object in the image is important. On the contrary, Fully Convolutional Networks (FCNs) are extremely inefficient since the dimensionality of the input is never reduced, and thus passing a large number of parameters through the network. Researchers ended up finding a solution with the use of autoencoders. Autoencoders simplify the representation of the input with an encoder but then recover the details with a decoder. A popular autoencoder network used for segmentation is the U-Net.&lt;/p&gt;
+
+&lt;p&gt;The current popular approach for depth estimation while driving is through a 3d camera, such as a LiDAR. This sensor projects a laser onto objects in its view and measures the time it takes for the laser to come back to the sensor. This method is extremely accurate but the problem is that they are very expensive, with an average cost of $8,000 (previously $75,000 but Waymo changed this earlier this year). This price is not low enough for large-scale manufacturing and common use of driverless cars. However, recent developments in Computer Vision for depth estimation have allowed us to perform these tasks using a 2D camera (&amp;lt;$100).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/depthmap.jpg&quot; alt=&quot;DepthMap&quot; class=&quot;center-image&quot; height=&quot;160px&quot; width=&quot;637px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In this post, we’ll use the classic Convolutional Neural Network to estimate depth given a road image. To do this, we must feed in road images with corresponding depth maps. We automate this process further by using stereoscopic images to create the depth maps algorithmically.&lt;/p&gt;
+
+&lt;h3 id=&quot;segmentation&quot;&gt;Segmentation&lt;/h3&gt;
+&lt;p&gt;The encoder part of the U-Net is a standard ConvNet, which consists of a series of convolutional layers along with ReLU nonlinearities and max pooling operations. The output is a feature map that contains all the important information of the input image. The upsampling path involves a series of up-convolutions concatenated with the obtained feature maps, normal convolutions, and ReLU nonlinearities. This may seem like a standard convolutional autoencoder but the one thing that distinguishes it are the skip connections between parallel layers, where feature maps from the down convolutional process are concatenated to the corresponding feature maps in the up-convolutional process. The purpose of this is to retain the original important features since some are still present in the segmentation. Here is the exact architecture:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/unet.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;518px&quot; width=&quot;777px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The original U-Net paper had the goal of segmenting biomedical images but this architecture has been seen to work for other segmentation tasks. We specifically utilize this segmentation network for detecting a car in a driving scene. We train the U-Net on 22,000 frames from a dashcam-video provided by Udacity. The many thousands of images show the network a large variance, meaning it does not look for the same exact car every time. Instead, it learns specific features found in every car, as low as certain edges and corners. This adaptation to new environments is crucial for a successful autonomous car.&lt;/p&gt;
+
+&lt;h3 id=&quot;depth-estimation&quot;&gt;Depth Estimation&lt;/h3&gt;
+&lt;p&gt;Humans are able to see depth due to their binocular vision. Each of our eyes inputs an image to our brain but these images are not exactly the same. Since our eyes are not located on the same point in space (parallax), there  exists some offset between the images. In Computer Vision, these 2d images are known as stereo images.&lt;/p&gt;
+
+&lt;p&gt;Given two stereo images, one can calculate a disparity map, which is simply the difference between the two images. Using geometry, it is evident that the depth is inversely proportional to the depth.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/calculatingdepth.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;209px&quot; width=&quot;425px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In code:
+&lt;script src=&quot;https://gist.github.com/tejpalv/f3267e232944363adb60b60653465616.js&quot;&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;We then take one of the stereo images, along with its corresponding depth map, and feed it into a vanilla CNN.  Once trained, we can do single-image depth estimation in real-time. Here is a review of the CNN architecture:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/cnn.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;229px&quot; width=&quot;792px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;results&quot;&gt;Results&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;/images/vehicle.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;151px&quot; width=&quot;629px&quot; /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;/images/a.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;192px&quot; width=&quot;640px&quot; /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;/images/b.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;192px&quot; width=&quot;640px&quot; /&gt;
+&lt;br /&gt;
+Trained on implementation from &lt;a href=&quot;https://github.com/mrharicot/monodepth&quot;&gt;here&lt;/a&gt; and &lt;a href=&quot;https://github.com/udacity/self-driving-car&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;u-net-code&quot;&gt;U-Net Code&lt;/h2&gt;
+
+&lt;h5 id=&quot;full-implementation-httpsgithubcomtejpalvu-net&quot;&gt;Full Implementation: &lt;a href=&quot;https://github.com/tejpalv/u-net&quot;&gt;https://github.com/tejpalv/u-net&lt;/a&gt;&lt;/h5&gt;
+
+&lt;h3 id=&quot;imports&quot;&gt;Imports&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/d41f2c8647b26d890d30b8cc7d8a4869.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;dataset&quot;&gt;Dataset&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/88d57ce08340a3b3887847a906c9202b.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;hyperparameters&quot;&gt;Hyperparameters&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/4e08e4ce96c6d49038def9f60418ab93.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;conv-2x2&quot;&gt;Conv 2x2&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/ea03a39587a6cf8862aa4bf2af780a7b.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;upsample&quot;&gt;Upsample&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/7e7e852cf9bca0ff350caefd9d8d8ca7.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;model&quot;&gt;Model&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/3aeff48767e212d716b5e0582d2c78b4.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;init-optimizer-and-loss&quot;&gt;Init, Optimizer, and Loss&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/31bb9a9bb2b09f2fbc43db285f876613.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;training&quot;&gt;Training&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/99e526e5087bd4496fc4f278f5a05ff8.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Tue, 21 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-21/unet/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-21/unet/</guid>
+      </item>
+    
+      <item>
+        <title>Protecting Privacy with Synthetic Training Data using Dual GANs</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 21st 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;The growth of Deep Learning in the last few years has been reliant on an immense amount of computational power and extensive datasets. For example, the annual ImageNet competition decreased image recognition error rates from 28.2% to 6.7% by providing millions of labeled images. However, these datasets are not available for many domains. This blog post analyzes the use of Generative Adversarial Networks (GANs) for developing reliable synthetic training data.&lt;/p&gt;
+
+&lt;p&gt;A special feature of GANs is its ability to generate images that no one has seen before. As we saw two posts ago, the generator is not trained on the training images but rather on trying to minimize the loss function of the discriminator. Since the generator never sees the images that the discriminator is trained on, it is not likely for it to produce images that are copies of it (given the training data is varied enough) but instead images of similar structure (learning from the distribution).&lt;/p&gt;
+
+&lt;p&gt;Since the produced images have never been seen before, it preserves a valuable characteristic: privacy. Many datasets are not publicly available due to privacy concerns, including: medicine, surveillance, driving, etc; however, these datasets could be reproduced with a GAN. This post looks particularly at generating images, for medical and satellite imaging domains, that are free from privacy concerns.&lt;/p&gt;
+
+&lt;p&gt;We also explore a dual GAN architecture, in regards of enhancing the output quality. Stacking GANs has shown to produce images that are of higher quality than a single GAN. Zhang et al. showed this by producing a low-quality image from text-to-image synthesis and then employing a conditional GAN to produce a high-quality image given the low-quality image. For example, we could have a situation where the first GAN produces a segmentation while the second GAN produces a photorealistic satellite image given the segmentation.&lt;/p&gt;
+
+&lt;center&gt;
+&lt;img id=&quot;hello&quot; src=&quot;/images/2.jpg&quot; /&gt; 
+&lt;img id=&quot;hello&quot; src=&quot;/images/1.jpg&quot; /&gt;
+&lt;/center&gt;
+&lt;style&gt;
+    #hello {
+        display: inline;
+        width: 256px;
+        height: 256px;
+    }
+&lt;/style&gt;
+
+&lt;h3 id=&quot;applicable-domains&quot;&gt;Applicable Domains&lt;/h3&gt;
+&lt;p&gt;Medical Data is fraught with privacy concerns, meaning that there are various barriers from distributing patient data aside from educational purposes. However, this in turn has hindered the advancement of computer-aided medical diagnosis since deep learning methods are not supported without extensive datasets. Synthetic data, on the other hand, solves this problem by providing sufficient amounts of training data.&lt;/p&gt;
+
+&lt;p&gt;Aerial/satellite images are especially difficult to obtain since it is expensive to fly a drone or device to take quality pictures for miles. This limits the publicity of the data since people are not likely to distribute it for free. In addition, there has been controversy on aerial images over residential areas that may obtrude upon privacy.&lt;/p&gt;
+
+&lt;p&gt;Another domain that is limited by a lack of public data is security. Surveillance cameras, for example, can be heavily improved with the use of computer vision techniques. Criminals can be easily detected through super-resolution and facial recognition, and computers can easily go through thousands of hours of footage while still being accurate. However, these datasets are not readily available for public research and contribution.&lt;/p&gt;
+
+&lt;p&gt;Even when the data is obtained, segmenting it is a tedious and unproductive process for humans. However, these images are extremely useful for creating topographical maps, road planning, disaster mitigation, and much more. Without sufficient data, neural networks are unable to help in these tasks.&lt;/p&gt;
+
+&lt;h3 id=&quot;methods&quot;&gt;Methods&lt;/h3&gt;
+&lt;p&gt;The first step of the pipeline is to generate the segmentation mask. We employ a DCGAN, as described in our image generation blog post. Although better models exist (DRAGAN, BEGAN, WGAN), we used a DCGAN architecture as we were the most comfortable with it. It’s nice for image generation since its depth allows for a hierarchical learning of representations. The depth also results in increased stability and higher quality images. However, the millions of parameters will dramatically increase the computational time.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/dcganarch.jpg&quot; alt=&quot;DCGAN&quot; class=&quot;center-image&quot; height=&quot;259px&quot; width=&quot;631px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Regarding the specifics, DCGAN differs from a vanilla GAN in the following ways: replacement of pooling layers with strided convolutions, use of batch normalization in both the generator and discriminator, removal of fully-connected layers (network depth compromises input dimensionality), heavy use of ReLU in the generator, and heavy use of Leaky ReLU in the discriminator. 
+We then use the generated mask to condition the mapping from the segmentation to a photorealistic satellite image. The conditional GAN follows the same training process as the normal GAN except it takes in an additional parameter that represents the condition (in our case, the segmentation mask). Here is what it looks like:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/cgan.jpg&quot; alt=&quot;CGAN&quot; class=&quot;center-image&quot; height=&quot;184px&quot; width=&quot;525px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As we saw in the GAN post, the generator and discriminator compete in the minimax game. Here is what it looks like with the additional parameter y:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/loss.png&quot; alt=&quot;Loss&quot; class=&quot;center-image&quot; height=&quot;46px&quot; width=&quot;585px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Finally, here is what our final architecture looks like:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/lathe.png&quot; alt=&quot;Loss&quot; class=&quot;center-image&quot; height=&quot;375px&quot; width=&quot;720px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;results&quot;&gt;Results&lt;/h3&gt;
+
+&lt;p&gt;Here are some results from our experimentation with retina data:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/bro.png&quot; alt=&quot;Loss&quot; class=&quot;center-image&quot; height=&quot;322px&quot; width=&quot;434px&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;dcgan-code&quot;&gt;DCGAN Code&lt;/h2&gt;
+
+&lt;h5 id=&quot;full-implementation-httpsgithubcomtejpalvdeep-convolutional-gan&quot;&gt;Full Implementation: &lt;a href=&quot;https://github.com/tejpalv/deep-convolutional-gan&quot;&gt;https://github.com/tejpalv/deep-convolutional-gan&lt;/a&gt;&lt;/h5&gt;
+
+&lt;h3 id=&quot;imports&quot;&gt;Imports&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/2dac81ed74d0086028cb621747bc7d11.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;hyperparameters-and-dataset&quot;&gt;Hyperparameters and Dataset&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/aa7e55a8f0bca1a30f6392533cdaf0ee.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;discriminator&quot;&gt;Discriminator&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/64f5dcb783c0eea35f329cc9f930b2fd.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;generator&quot;&gt;Generator&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/9102a11fef07880598909dcf1ad8c458.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;init-loss-and-optimizer&quot;&gt;Init, Loss, and Optimizer&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/020e4066c76884370e828d98563f1399.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;training&quot;&gt;Training&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/97bc9dfa494379391dfb8ea5b8651360.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;testing&quot;&gt;Testing&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/tejpalv/5aa99847808ac88ddf81b3c8d0dc1e43.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Tue, 21 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-21/dcgan/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-21/dcgan/</guid>
+      </item>
+    
+      <item>
+        <title>Generating Patterns from Compositional Pattern Producing Networks</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 20th 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;Modern generative models, including DCNN’s, GAN’s, and VAE’s, try to produce an entire image at once. However, as we scale the resolution of these images, the memory constraints of our network exponentially meet their limit. As a result, most images produced from generative models today barely meet a size over 500,000 pixels. For a 3-channel image, that’s only ~410x410.&lt;/p&gt;
+
+&lt;p&gt;Compositional Pattern-Producing Networks (CPPNs) address this problem (although they are probably not the best for regular image-generation purposes). Instead of generating the entire image at once, CPPNs take an iterative approach to the problem: they generate pixels one by one. These networks take the location of the pixel as input, theoretically allowing for these networks to produce images of any desired resolution given that you input all the locations.&lt;/p&gt;
+
+&lt;p&gt;One cool thing about these networks is that even if they are not trained, they produce really interesting patterns that are not just the resemblance of random noise (what you would expect from a random ANN). Here are some examples of images we produced using our CPNN in PyTorch (github):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/lmao.png&quot; alt=&quot;galley&quot; class=&quot;center-image&quot; height=&quot;355px&quot; width=&quot;757px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;cpnn-architecture&quot;&gt;CPNN Architecture&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/model.png&quot; alt=&quot;model&quot; class=&quot;center-image&quot; height=&quot;562px&quot; width=&quot;800px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As mentioned above, the CPNN takes in the location as two of its inputs. Another value it takes is the radius of the location, or r= sqrt(x^2 + y^2). This value is essential to the quality of images produced, as it helps the network generate circular patterns without having to curve-fit to such function (highly unlikely without training). The network also takes a latent space vector, which is essentially a series of n elements that are essentially just random variables inputted into the network.&lt;/p&gt;
+
+&lt;p&gt;Why do we need such a thing? We really don’t, but it’s nice to have around as by exploring the images in the R dimensions of that vector, we can explore a large amount of images without modifying the weights in the network. In bigger networks, simply modifying one weight won’t be enough compared to changing a value in the latent vector. Also, because our NN is a continuous function, if we adjust the latent vectors position continuously, our output will also be continuous; this leads to cool animations where we can see our network explore the latent space:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/cppn.gif&quot; alt=&quot;gif&quot; class=&quot;center-image&quot; height=&quot;256px&quot; width=&quot;256px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;generated-images&quot;&gt;Generated Images&lt;/h3&gt;
+
+&lt;p&gt;Because our weights are completely random, the non-linearities/activation functions, network depth/size have a big difference in what types are produced by the network. Another interesting fact about these images are that even if I scale the resolution of the image dramatically, overall the image looks the same if I use the same weights. It is important to note that these weights are completely random, and it is quite surprising that they don’t simply produce noise. Anyways, here are a collection of images we produced using a variety of hyperparameters / architectural modifications on our CPPN network:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/lmao.png&quot; alt=&quot;examples&quot; class=&quot;center-image&quot; height=&quot;355px&quot; width=&quot;757px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We can observe how as we increase the amount of channels, the more complex the image becomes. The images more and more start  to look the same.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/32chan.png&quot; alt=&quot;32chan&quot; class=&quot;center-image&quot; height=&quot;212px&quot; width=&quot;757px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We also experimented with how well the images kept form if I tried to generate the same image at a higher resolution (using the same weights). We can observe how overall the image stays the same and how CPPN’s are resolution invariant.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/upscaling.png&quot; alt=&quot;upscaling&quot; class=&quot;center-image&quot; height=&quot;456px&quot; width=&quot;786x&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Overall, we can notice that the image has seem to gotten sharper while maintaing the overall strcture.&lt;/p&gt;
+
+&lt;h3 id=&quot;code&quot;&gt;Code&lt;/h3&gt;
+
+&lt;h5 id=&quot;full-implementation-httpsgithubcomjohnguibascppn-art&quot;&gt;Full Implementation: &lt;a href=&quot;https://github.com/johnguibas/cppn-art&quot;&gt;https://github.com/johnguibas/cppn-art&lt;/a&gt;&lt;/h5&gt;
+
+&lt;h4 id=&quot;imports&quot;&gt;Imports&lt;/h4&gt;
+
+&lt;script src=&quot;https://gist.github.com/johnguibas/44ab17da752d3f848c7bb98a831f4390.js&quot;&gt;&lt;/script&gt;
+
+&lt;h4 id=&quot;hyperparameters&quot;&gt;Hyperparameters&lt;/h4&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/18174b532fe47c72b26353e58e9616c4.js&quot;&gt;&lt;/script&gt;
+
+&lt;script src=&quot;https://gist.github.com/johnguibas/94613d6d6aff6153b7ed1238e419f1e3.js&quot;&gt;&lt;/script&gt;
+
+&lt;h4 id=&quot;model&quot;&gt;Model&lt;/h4&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/b7cb339a790407e131757b265b95a914.js&quot;&gt;&lt;/script&gt;
+
+&lt;h4 id=&quot;creating-input&quot;&gt;Creating Input&lt;/h4&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/28672a6665ce464dfca079c7cb3d8482.js&quot;&gt;&lt;/script&gt;
+
+&lt;h4 id=&quot;forming-the-image&quot;&gt;Forming the Image&lt;/h4&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/b371c1f8d7f0338f369e605fb258408d.js&quot;&gt;&lt;/script&gt;
+
+&lt;h4 id=&quot;reshape&quot;&gt;Reshape&lt;/h4&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/d684edfec051b94cffe96917544cb805.js&quot;&gt;&lt;/script&gt;
+
+&lt;h4 id=&quot;output&quot;&gt;Output&lt;/h4&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/6d95a4eec8cc6f86726258cbd2c45018.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Mon, 20 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-20/cppn/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-20/cppn/</guid>
+      </item>
+    
+      <item>
+        <title>Super-resolution GAN for Medical Images</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 16th 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;p&gt;An important imaging task is super-resolution: the process of enhancing the resolution of an image. Recently, researchers have gone at this problem using Deep Learning, and the methods have been successful. In this post, we look at a common medical procedure and show how it can be drastically improved with the use of GANs.&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;Capturing real-time images of the insides of a patient may be difficult due to the restricted space and intricacies of the human body. In particular, a colonoscopy requires a video camera on a tube to be placed through the gastrointestinal tract, which goes to almost twenty-three feet long. The procedure is often accompanied by major discomfort, including cramping pains and abdominal swelling due to the aggressiveness of the procedure. Luckily, new methods have been introduced that can reduce the complexity of the procedure. With the development of nanotechnology, this examination can be done with a small capsule [1]. Also, recent advancements in transient electronics, have allowed for safe and painless medical diagnosis. However, the size of the device often compromises the quality of the images. A Low-resolution (LR) image cannot be used to its full potential, giving low-accuracies in classification models as well as difficulty for doctors when examining the images by eye.&lt;/p&gt;
+
+&lt;p&gt;Recently, Generative Adversarial Networks have been used for super-resolution [2]. Given an LR image, there are multiple possibilities for a corresponding and accurate HR image and the generator is trained to learn one of these mappings. Super-resolution has been commonly used in various domains such as satellite imaging, security, face-recognition, as well as medicine. The important features in a HR medical image are crucial for an accurate interpretation of the data.&lt;/p&gt;
+
+&lt;p&gt;This post analyzes the benefits of applying a super-resolution procedure to medical data, in terms of classification accuracy and qualitative results. It also enables the development of cheaper and smaller cameras and although compromising on quality, with the use of super-resolution technology, the small cameras can be successfully implemented.&lt;/p&gt;
+
+&lt;p&gt;Medical images are produced in two main forms: scans and photographs. Scans include X-rays, MRIs, CTs, etc. while common medical photography includes fundus photography and photography of internal tracts. Scan super-resolution has been explored by mapping MRI to CT scans as well as enhancing the resolution of low-dose scans. This post looks specifically into photography from colonoscopy procedures.&lt;/p&gt;
+
+&lt;h3 id=&quot;data&quot;&gt;Data&lt;/h3&gt;
+&lt;p&gt;We train the super-resolution GAN (SRGAN) on 1200 32x32 images from CVC-ColonDB [3].&lt;/p&gt;
+
+&lt;h3 id=&quot;methods&quot;&gt;Methods&lt;/h3&gt;
+&lt;p&gt;The SRGAN follows the typical GAN format but the architectures for the discriminator and generator are different:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/srgan.png&quot; alt=&quot;srgan&quot; class=&quot;center-image&quot; height=&quot;337px&quot; width=&quot;644px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The most important feature of the Generator architecture is the B residual blocks. The residual block is the building block of the Residual Network (ResNet), which is one of the top architectures used for Image Recognition. The goal of any network is to find the mapping between an input and output. It does this by learning different functions along the way, one being the identity function. The identity function is very important since the output image is likely to have a similar structure to the input. A model without residual blocks never learns the exact identity function (input = output) but instead gets very close to it. The network would make tiny gradient changes to get closer to the function, resulting in the vanishing gradient problem. The ResNet fixes this by forcing the network to learn the identity mapping through an element-wise addition:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/residual.png&quot; alt=&quot;srgan&quot; class=&quot;center-image&quot; height=&quot;220px&quot; width=&quot;376px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The discriminator is a pretty straightforward CNN. It uses a series of Convolution Layers, Leaky ReLUs, and Batch Normalization layers to learn the difference between high and super-resolution images. It takes in an input image and returns a scalar between 0 and 1, which is the certainty that the input is of super-resolution. A probability of 0.5 means that the discriminator cannot tell if the generated image is high-resolution or super-resolution.&lt;/p&gt;
+
+&lt;p&gt;SRGAN uses mean squared error (MSE) as the loss function, but the truth labels are a little different.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;MSE = \frac{1}{n} * \sum_{i=1}^{n} (y_{i} - \tilde{y}_i)^{2}&lt;/script&gt;
+
+&lt;p&gt;The minimization or solution space of a per-pixel loss function usually involves the generation of a smoother/more general image, which is counter-productive for super-resolution. Instead, SRGAN uses a perceptual loss, which has been proven effective and efficient for style transfer and super-resolution. Perceptual loss is based on comparing outputs to high-level features extracted from pretrained networks, specifically the VGG-19. This loss encourages the network to have similar features rather than exact pixel values to the original image. Although this may not perform well quantitatively, the sharper details from the use of a perceptual loss result in a qualitatively superior output.&lt;/p&gt;
+
+&lt;h3 id=&quot;examples&quot;&gt;Examples&lt;/h3&gt;
+&lt;p&gt;Here is an example image processed by SRGAN. As you can see, despite the low resolution of the initial image, the network was able to upscale it succesfully. However, it had a hard time dealing with spots of reflection.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/9.png&quot; alt=&quot;lr&quot; class=&quot;center-image&quot; height=&quot;306px&quot; width=&quot;600px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;references&quot;&gt;References&lt;/h3&gt;
+&lt;ol&gt;
+  &lt;li&gt;“PillCam Capsule Endoscopy.” PillCam Capsule Endoscopy - Given Imaging, www.givenimaging.com/en-int/Innovative-Solutions/Capsule-Endoscopy/Pages/default.aspx.&lt;/li&gt;
+  &lt;li&gt;Ledig, Christian, et al. “Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network.” [1609.04802] Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network, 25 May 2017, arxiv.org/abs/1609.04802.&lt;/li&gt;
+  &lt;li&gt;“CVC Colon DB.” Machine Vision Group, mv.cvc.uab.es/projects/colon-qa/cvccolondb.&lt;/li&gt;
+&lt;/ol&gt;
+
+</description>
+        <pubDate>Thu, 16 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-16/srgan/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-16/srgan/</guid>
+      </item>
+    
+      <item>
+        <title>The Generative Adversarial Network Explained</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 11th 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;p&gt;In our previous blog post we discussed the effectiveness of Neural Networks for image classification tasks comparable to humans. However, how good are neural networks at being creative? Here we explore the Generative Adversarial Network: the most effective generative model used today.&lt;/p&gt;
+
+&lt;p&gt;The Generative Adversarial Network is made up of two networks. One network is known as the discriminator and the other is the generator. The main idea behind the GAN is to have these two networks compete with each other. The discriminator is tasked to identify between real and fake samples of a certain class of image, while the generator tries to produce more realistic images that fool the discriminator. The two networks are trained simultaneously, and the idea is that the competition will drive them to produce synthetic data that is indistinguishable from fake data.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/bedroom.png&quot; alt=&quot;exampleimgs&quot; class=&quot;center-image&quot; height=&quot;312px&quot; width=&quot;619px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;discriminator&quot;&gt;Discriminator&lt;/h3&gt;
+&lt;p&gt;The discriminator is essentially a standard CNN like from our previous blog post. It is a binary classifier, meaning that there is only one output node representing a value from 0-1, which indicates the probability of it being real or fake. A probability of 0.5 will mean that the discriminator cannot tell if the input was real or fake. We can respectively subtract this value from 1 to get the corresponding opposite probability. The discriminator uses the cross entropy loss formula denoted as:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;H(p,q) = \sum_{i}^{n} p_{i} * log(q_{i})&lt;/script&gt;
+
+&lt;h3 id=&quot;generator&quot;&gt;Generator&lt;/h3&gt;
+&lt;p&gt;The generator is a deconvolutional network. Just as the name suggests, it essentially works in a reverse manner to the standard convolutional neural network. Instead of reducing an image into a lower dimensionality for feature extraction, as did the CNN, the generator takes in a random noise vector as up-samples it.&lt;/p&gt;
+
+&lt;p&gt;The deconvolutional network has the three main layers: deconvolution, unpooling, and ReLU. The deconvolutional layer starts off with a feature map and for each pixel value, it maps it to a square kernel, upsampling the image. This is done for each feature map and can be thought of as a matrix multiplication between the transpose of the whole filter matrix and the input. This is what it looks like:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/gan-animation.gif&quot; alt=&quot;Deconv&quot; class=&quot;center-image&quot; height=&quot;449px&quot; width=&quot;395px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;For unpooling, we must revert the pooling operation by going from a single pixel to a 2x2 array of pixels. However, it is impossible to do this accurately based off guessing. Instead, our network uses switch variables to memorize the pooling operations from the convolutional layer to accurately reconstruct the image.&lt;/p&gt;
+
+&lt;p&gt;The last layer is simply applying the ReLU to add a nonlinearity. The ReLU is simply an activation function and does not change the resolution of the image. See the blog post on CNNs for more information on ReLUs.&lt;/p&gt;
+
+&lt;h3 id=&quot;adversarial-training&quot;&gt;Adversarial Training&lt;/h3&gt;
+&lt;p&gt;The fascinating part of GANs is its use of adversarial training. Meaning, the generator and discriminator networks act as adversaries in terms of their loss functions. This is based off of the minimax game in Game Theory.&lt;/p&gt;
+
+&lt;p&gt;The distributions, p and q, are given by our example training data and the generator, where the training data refers to real, and the generated images refer to fake. Because we only have two classes, the loss function can be simplified to the binary cross entropy function:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;H((x_{1},y_{1}),D) = -y_{1}*log(D(x_{1})) - (1-y_{1})*log(1-D(x_{1}))&lt;/script&gt;
+
+&lt;p&gt;X1 represents one input data point and y1 represents our label (not the entire dataset). However, because we feed the discriminator exactly half real and half fake data, we need to encode this probability, the loss function therefore becomes:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;H((x_{i},y_{i}),D) = -\frac{1}{2} y_{i}*log(D(x_{i})) - \frac{1}{2}(1-y_{i})*log(1-D(x_{i}))&lt;/script&gt;
+
+&lt;p&gt;We first train the discriminator with training data (we used MNIST). The input is passed through a series of convolutional layers (downsampling the image to extract features) and ReLUs, ending with a Sigmoid activation. The loss is computed using the original MNIST labels. Next, the generator model is called on a random noise and the output of that is run through the discriminator, computing the loss (The output is compared with a set of fake labels). We then do backprop on the discriminator, given that it has now analyzed both real and fake images.&lt;/p&gt;
+
+&lt;p&gt;Next, we must train the generator. We have it produce images given random input and put those synthetic images through the discriminator, giving us a loss. We use this loss to perform backprop on the generator model and repeat this whole process for a given number of epochs. The code for this process is broken down below&lt;/p&gt;
+
+&lt;h2 id=&quot;code&quot;&gt;Code&lt;/h2&gt;
+
+&lt;h5 id=&quot;full-implementation-httpsgithubcomtejpalvpytorch-basicsblobmasterganpy&quot;&gt;Full Implementation: &lt;a href=&quot;https://github.com/tejpalv/pytorch-basics/blob/master/gan.py&quot;&gt;https://github.com/tejpalv/pytorch-basics/blob/master/gan.py&lt;/a&gt;&lt;/h5&gt;
+
+&lt;h5 id=&quot;imports&quot;&gt;Imports&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/b110f01b84d6a0d299ed76943104a5e8.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;hyperparameters-and-loading-data&quot;&gt;Hyperparameters and Loading Data&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/f64a611450fce47b148e80fce3f20693.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;discriminator-1&quot;&gt;Discriminator&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/5acf458bbda2d5f26b76b54344e8b232.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;generator-1&quot;&gt;Generator&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/d5ff137604c4a7ad5895daaefb712e66.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;loss-function-and-optimizer&quot;&gt;Loss function and Optimizer&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/5a3a0b802f5ae31e70184c5cb06e98d2.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;training&quot;&gt;Training&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/abedbce79114a245c65609a90270e451.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;save-images&quot;&gt;Save Images&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/twopointseven/38daa858167c82029057dab6055faf7d.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Sat, 11 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-11/gan/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-11/gan/</guid>
+      </item>
+    
+      <item>
+        <title>Convolutional Neural Networks Explained</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 9th 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;p&gt;Convolutional Neural Networks (CNNs) are a certain type of Neural Network that excel at image recognition and classification. They are used to analyze an image through the extraction of relevant features and have special characteristics that allow it to perform better on 3D and 2D volumes of data. Through a series of layers, the CNN extracts relevant features from the input image. The four main layers are known as convolutional layers, ReLUs, pooling layers, and fully-connected layers. Just as how an artificial neural network can have multiple hidden layers, a deep CNN may repeat these layers multiple times.&lt;/p&gt;
+
+&lt;p&gt;If you are new to neural networks in general, we recommend that you visit our introductory blog post first.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/features.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;290px&quot; width=&quot;622px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;convolutional-layer&quot;&gt;Convolutional Layer&lt;/h3&gt;
+&lt;p&gt;The Convolutional Layer is the meat of the whole process. Similar to the neural network, the convolution layer has a set of learnable weights, called filters. The filter is usually of a size smaller than 10x10 pixels and slides across the image, computing the dot product between the input pixels and filter. The resulting matrix is known as an activation map and can be stacked spatially to produce the output volume.&lt;/p&gt;
+
+&lt;p&gt;Here are some important terms to know: the size of the filter is often known as the kernel size, stride refers to how many units the filter moves every iteration of the convolution, and padding refers to the zeros you add around the image so the filter can be applied onto pixels nearing the edges of the image.&lt;/p&gt;
+
+&lt;p&gt;For image recognition, the filters learned usually represent lower to higher spatial features. For example, filters in the first convolution might represent edges or corners. Through the combination of these lower level filters, filters in later convolutions are able to take this information and look for higher level features such as faces.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/FILTER.png&quot; alt=&quot;image-title-here&quot; class=&quot;center-image&quot; height=&quot;339px&quot; width=&quot;819&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;relu&quot;&gt;ReLU&lt;/h3&gt;
+&lt;p&gt;Rectified Linear Units (ReLUs) serve as activation functions, and are simply defined as:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;f(x) = max(0, x)&lt;/script&gt;
+
+&lt;p&gt;The simplicity of this function allows for improved training speed, in both the forward and backward passes. Observe that computing the gradient of the function simply returns a 0 or 1, only dependent on sign of x. In comparison, logistic and hyperbolic activation functions, such as the sigmoid function, are prone to the vanishing gradient problem. The vanishing gradient problem is based on the gradients having an infinitesimal effect on the output. A local minimum of the loss function is found and the small changes of the gradients prevents the model from learning. However, ReLUs are not subject to this since their derivatives are simply 0 or 1.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/relu.png&quot; alt=&quot;image-title-here&quot; class=&quot;center-image&quot; height=&quot;336px&quot; width=&quot;897px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;pooling-layer&quot;&gt;Pooling Layer&lt;/h3&gt;
+
+&lt;p&gt;To understand an image, the CNN must downsample it to include only relevant information. Pooling layers are used to reduce the spatial size, thus reducing the total number of parameters of the model. This lowers computation time and prevents overfitting since the output of the pooling layer is a more general representation of the input.&lt;/p&gt;
+
+&lt;p&gt;A simple type of pooling is max pooling, which applies a filter of size, let’s say, 2x2 across the image. For every 2x2 set of pixels on the input, it will only keep the maximum pixel value and remove the rest, thus downsampling the image by 4x in our example. Note: this filter preserves depth to keep an accurate spatial representation of the input.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/maxpool.png&quot; alt=&quot;image-title-here&quot; class=&quot;center-image&quot; height=&quot;231px&quot; width=&quot;430px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;fully-connected-layer&quot;&gt;Fully-Connected Layer&lt;/h3&gt;
+&lt;p&gt;Fully-connected layers are used at the end of the model as a nonlinear transformation, by a simple matrix multiplication, to go back from activation maps to relevant high-dimensional data. The channels of information are flattened, and their spatial representation is lost. It is important to note that a fully-connected layer is the same thing as performing a convolutional layer with the kernel size as the size of the image.&lt;/p&gt;
+
+&lt;h3 id=&quot;forward-pass&quot;&gt;Forward Pass&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/network.png&quot; alt=&quot;image-title-here&quot; class=&quot;center-image&quot; height=&quot;294px&quot; width=&quot;816px&quot; /&gt;
+The forward pass simply involves running the input image through each of the filters, pooling layers, and ReLU’s.&lt;/p&gt;
+
+&lt;h3 id=&quot;backpropagation&quot;&gt;Backpropagation&lt;/h3&gt;
+
+&lt;p&gt;In the case of CNNs, backpropagation is used to make adjustments to the filters in order to get a lower loss. It is calculated similarly to  the artificial neural network, however it accounts for the addition of filters. (see blog post on simple neural networks, more math explained there)&lt;/p&gt;
+
+&lt;h3 id=&quot;current-architectures&quot;&gt;Current Architectures&lt;/h3&gt;
+&lt;p&gt;Within the last few years, many new CNN architectures have come out. It’s helpful to be familiar with them since you will most likely encounter them in practice. We will briefly look at AlexNet, VGGNet, and ResNet.&lt;/p&gt;
+
+&lt;p&gt;AlexNet became popular after its submission to the annual ImageNet ILSVRC competition in 2012. It’s key features are its significant depth as well as its use of stacked convolutional layers without pooling after each one.&lt;/p&gt;
+
+&lt;p&gt;The VGGNet showcased the importance of depth in a CNN architecture. The model contained 16 convolutional and fully-connected layers with convolutions of size 3x3 and 2x2 for pooling. However, due to the depth and large number of fully-connected layers, the net ended up having over 140 million parameters, making it computationally expensive in terms of both memory and time.&lt;/p&gt;
+
+&lt;p&gt;The ResNet is a residual network that removes many of the drawbacks of the VGGNet, being extremely efficient through the use of skip connections, absence of fully-connected layers, and significant use of batch normalization. A skip architecture is where the network gives the output of a layer to the next layer as well as the one after it, thus skipping to the next connection. Batch normalization is a used to normalize the distribution of the input across the batch. It scales and shifts this distribution, allowing for a more stable training process. This also allows for a higher learning late without getting stuck in a local minimum of the loss function.&lt;/p&gt;
+
+&lt;h2 id=&quot;code&quot;&gt;Code&lt;/h2&gt;
+
+&lt;h5 id=&quot;full-implementation-httpsgithubcomjohnguibascnn-pytorch&quot;&gt;Full Implementation: &lt;a href=&quot;https://github.com/johnguibas/cnn-pytorch&quot;&gt;https://github.com/johnguibas/cnn-pytorch&lt;/a&gt;&lt;/h5&gt;
+
+&lt;h5 id=&quot;imports&quot;&gt;Imports&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/ccce30c5f685f00e1f935a3b3b4dea1a.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;hyperparameters&quot;&gt;Hyperparameters&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/0c72bd7bd74f6692376dd26055abdc44.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;load-data&quot;&gt;Load Data&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/019b17b1325fc87a77ecf56c43e40850.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;architecture-and-forward-pass&quot;&gt;Architecture and Forward Pass&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/27165cc2da9cde610cc89f0c0e15bd66.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;loss-and-optimizer&quot;&gt;Loss and Optimizer&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/f5ec355ac2301ff32dad55bfabb7b083.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;training&quot;&gt;Training&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/c92f01c3c498b203680eb657deb13988.js&quot;&gt;&lt;/script&gt;
+
+&lt;h5 id=&quot;testing&quot;&gt;Testing&lt;/h5&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/5817b7a14e234365aff273b63c5e3488.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Thu, 09 Nov 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-11-09/cnn/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-09/cnn/</guid>
+      </item>
+    
+      <item>
+        <title>A Simple Neural Network</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 5th 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;p&gt;Over the last weekend, we committed ourselves to learning exactly how a neural network (NNs) works. This intro blog post will teach you everything you need to get a straightforward neural net running. To start off, here is what the architecture of a simple 2-layer NN looks like:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/net.png&quot; alt=&quot;Architecture&quot; class=&quot;center-image&quot; height=&quot;350px&quot; width=&quot;350px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The learning process in neural nets has two parts: A forward pass and a backward pass. As seen in the diagram above, the inputs go through each layer in the forward pass until reaching the output layer. From there, each output node passes information back through the network to make adjustments for the next forward pass.&lt;/p&gt;
+
+&lt;h3 id=&quot;forward-pass&quot;&gt;Forward Pass&lt;/h3&gt;
+
+&lt;p&gt;The first layer of a neural network is the input layer and each input node in the input layer is connected to every hidden node (fully-connected). 
+For each connection between nodes in the input and hidden layers, there is a individual weight matrix that the input is multiplied by. The output of this multiplication is summed across all other connections to the same node. This can be simply expressed as neat matrix multiplications between the input and weights matrices. For example, if our input matrix is of size 1x3, and our weights matrix would be of size 3x5, we would have 15 individual connections.&lt;/p&gt;
+
+&lt;p&gt;The next step of the forward pass is applying the sigmoid function on the values obtained from the multiplication between the input and first weights matrices. The sigmoid function is:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{1}{1 + e^{-x}}&lt;/script&gt;
+
+&lt;p&gt;and maps the input into a value from 0 to 1, also adding a nonlinearity to the model. The sigmoid function is what ultimately allows us to curve fit to our desired function.&lt;/p&gt;
+
+&lt;p&gt;We have now finished the pass from input times weights times sigmoid. If you are familiar with Biology, this can be visualized as a neuron. The dendrites are the input and weights, the cell body is the multiiplication and activation, and the output axon is the sum of the multiplications.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/node.png&quot; alt=&quot;Node&quot; class=&quot;center-image&quot; height=&quot;350px&quot; width=&quot;350px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We then repeat how we passed the data through the input nodes to HL1 (hidden layer 1) when going from HL1 to Hl2. We multiply the hidden layer 1 values with a second weights matrix and apply the sigmoid function. To go from the HL2 to the output layer, we repeat the process again.&lt;/p&gt;
+
+&lt;h3 id=&quot;backpropagation&quot;&gt;Backpropagation&lt;/h3&gt;
+
+&lt;p&gt;Once we have our output, we need to evaluate how well the weights did in the forward pass. Using the training data as labels, we can calculate the loss using a formula known as mean squared error:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{(truth - output)^{2}}{2}&lt;/script&gt;
+
+&lt;p&gt;Using this loss and basic calculus, we can approximate how we need to adjust our weights to minimize the loss. Our goal is to find how much the loss will change from a change in the weights, or:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dL}{dW}&lt;/script&gt;
+
+&lt;p&gt;This term expresses how much the loss increases or decreases when we make a small change to a weight. By following how we evaluated our loss and applying the chain rule, we can calculate this term. Going backwards, the most final function we apply to get our error is MSE. Using the power rule we can calculate the derivative of this function:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;E_{total} = \frac{1}{2} * (target_{0} - output_{0})^{2} + \frac{1}{2} * (target_{1} - output_{1})^{2} + \frac{1}{2} * (target_{2} - output_{2})^{2}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dE_{total}}{dOutput_{0}} = 2 * \frac{1}{2} * (target - output)^{2-1} * -1 + 0 + 0&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dE_{total}}{dOutput_{0}} = output_{0} - target_{0}&lt;/script&gt;
+
+&lt;p&gt;Next, we must calculate the derivative of step before we calculate the output, which was the sigmoid function:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;out_{0} = \frac{1}{1+e^{-out_{0_{presig}}}}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dout_{0}}{dout_{0_{presig}}} = out_{0} * (1 - out_{0})&lt;/script&gt;
+
+&lt;p&gt;Finally, we calculate how the weight influenced the output (pre-sigmoid):&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;out_{presig} = w_{0} * h1_{0} + w_{1} * h1_{1} ...&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dout_{presig}}{dw_{0}} = h1_{0}&lt;/script&gt;
+
+&lt;p&gt;Now that we have seperated calculated the derivative of each “chained” function, we can finally calculate the derivative between the loss and weight 0:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dE_{total}}{dw_{0}} = \frac{dE_{total}}{dOutput_{0}} * \frac{dout_{0}}{dout_{0_{presig}}} * \frac{dout_{presig}}{dw_P0}&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac{dE_{total}}{dw_{0}} = (output_{0} - target_{0}) * output_{0} * (1 - output_{0}) * h1&lt;/script&gt;
+
+&lt;p&gt;To update each individual weight, we apply the formula appropiately and calculate the new weight through:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;w_{0} = w_{0} + (w_{0} * \frac{dE}{dw_{0}} * learningrate)&lt;/script&gt;
+
+&lt;p&gt;We had some extra time so we wrote it out…(it was 3am at a hackathon in our math classroom)
+&lt;br /&gt;
+&lt;br /&gt;
+&lt;img src=&quot;/images/backprop.JPG&quot; alt=&quot;image-title-here&quot; class=&quot;center-image&quot; height=&quot;325px&quot; width=&quot;500px&quot; /&gt;
+&lt;br /&gt;
+&lt;br /&gt;&lt;/p&gt;
+&lt;h5 id=&quot;full-implementation-httpsgithubcomtejpalvpytorch-basicsblobmasternnpy&quot;&gt;Full Implementation: &lt;a href=&quot;https://github.com/tejpalv/pytorch-basics/blob/master/nn.py&quot;&gt;https://github.com/tejpalv/pytorch-basics/blob/master/nn.py&lt;/a&gt;&lt;/h5&gt;
+
+&lt;h3 id=&quot;imports&quot;&gt;Imports&lt;/h3&gt;
+
+&lt;script src=&quot;https://gist.github.com/johnguibas/c4fb4f01eb27ce17dd41780713fcc7ff.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;datatype&quot;&gt;Datatype&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/68af7c1a6d4d667ce126160a6cdb57a0.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;hyperparameters&quot;&gt;Hyperparameters&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/8a450e40c06bdc0f230409bbc384bdb1.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;input-output-and-weights&quot;&gt;Input, Output, and Weights&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/f82a708cd8a9d59258a1276025655963.js&quot;&gt;&lt;/script&gt;
+
+&lt;h3 id=&quot;training&quot;&gt;Training&lt;/h3&gt;
+&lt;script src=&quot;https://gist.github.com/johnguibas/15c2e09a5d30ed152228718a2b073678.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Sun, 05 Nov 2017 00:00:00 -0700</pubDate>
+        <link>http://localhost:4000/2017-11-05/nn/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-05/nn/</guid>
+      </item>
+    
+      <item>
+        <title>Facial Recognition through Eigenfaces</title>
+        <description>&lt;p&gt;&lt;strong&gt;November 1st 2017&lt;/strong&gt; - John Guibas &amp;amp; Tejpal Virdi&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;This blog post demonstrates the process of analyzing a set of images with the goal of identifying an average face, prominent face, eigenface, and recognition system. The process utilizes the mathematical concepts of matrices, eigenvalues, and eigenfaces (formally known as eigenvectors) with the goal of reducing a high-dimensional space from a large data set of pixel values. The eigenfaces (eigenvectors) compose a face space (eigenspace) in which a variance is identifiable and can be operated on through the process of Principal Component Analysis. Each image is read by its pixel’s grayscale values from 0-255. The process of face recognition through eigenfaces differs from other face recognition processes since features are not visualized in 3D space and distinctive features (nose, ears, eyes, etc.) are not identified.&lt;/p&gt;
+
+&lt;h3 id=&quot;eigenfaces&quot;&gt;Eigenfaces&lt;/h3&gt;
+&lt;p&gt;The first step when dealing with face images is to represent each image Ik as a column vector of grayscale values for each pixel. This process can be thought of as transposing each of the N rows of N pixels into a &lt;script type=&quot;math/tex&quot;&gt;N^{2}&lt;/script&gt; x 1 column vector and essentially visualizing an image as a point in N2 dimensions. An average face can be found by summing the column vectors of each image and dividing entries by the scalar M (# of images). Prominent parts of each face are found by subtracting the average face from each face in the set of images, denoted as Φi=Γi−Ψ. The prominent faces are put in the matrix A where &lt;script type=&quot;math/tex&quot;&gt;A * A_{T}&lt;/script&gt; represents the covariance matrix. However, this matrix is high-dimensional (&lt;script type=&quot;math/tex&quot;&gt;N^{2}&lt;/script&gt; x &lt;script type=&quot;math/tex&quot;&gt;N^{2}&lt;/script&gt;) and must be reduced by taking the inner product &lt;script type=&quot;math/tex&quot;&gt;A_{T} * A&lt;/script&gt; (M x M dimensional). The process of obtaining the covariance matrix is what is known as Principal Component Analysis (PCA). Although the result is a simple matrix multiplication, the process of PCA is quite complex and will be discussed in the upcoming paragraph. Once the covariance matrix is obtained, the M eigenvectors and eigenvalues can be computed. These eigenvectors can be rendered on the screen to appear as eigenfaces. The process of face recognition and reconstruction utilizes the concept of weights to express an input image as a sum of eigenfaces.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/3.png&quot; alt=&quot;face&quot; class=&quot;center-image&quot; height=&quot;112px&quot; width=&quot;92px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The first step is to find a set of images you can use as a training set. I would recommend using the AT&amp;amp;T Cambridge Face Set, or the Yale Face Database. We used the faces available online of the Gunn Math Faculty. We will refer to the size of this image set as M. Each image will then be referred to as of &lt;script type=&quot;math/tex&quot;&gt;{I}\ or \ I_{1}, I_{2}, I_{3} \ ... \ I_{M}&lt;/script&gt;&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+I_{k} = \begin{bmatrix}
+p_{1} &amp;p_{2} &amp; \cdots &amp;p_{a} \\ 
+ p_{a+1}&amp; p_{a+2} &amp; \cdots&amp;p_{2a}\\ 
+\vdots &amp;  \vdots &amp; \ddots &amp; \vdots \\ 
+ p_{3a+1}&amp; p_{3a+2}&amp; \cdots &amp; p_{4a}
+\end{bmatrix} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;To make our recognition more effective we must set the standards for our images.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;The images must be face aligned.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Must be of the same dimensions N x N&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Must all be of grayscale values from 0 - 255 (recommended)&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;We can represent each image as a N x N matrix where each element corresponds to the gray scale value of a pixel.&lt;/p&gt;
+
+&lt;p&gt;Once we have that our next step is to convert each image into a single point in a &lt;script type=&quot;math/tex&quot;&gt;N^{2}&lt;/script&gt; dimensional space. We do this by transposing each row one by one and appending each row below one another to create a  &lt;script type=&quot;math/tex&quot;&gt;N^{2}&lt;/script&gt; x 1 column vector. We repeat this for every image in the set.  By systematically appending each row of the I matrix we can get a vector that looks something like this:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\Gamma =  \begin{bmatrix}
+p_{1}\\ p_{2}
+\\ p_{3}
+\\ \vdots
+\\ p_{n}
+\end{bmatrix}&lt;/script&gt;
+
+&lt;p&gt;Because we are looking for the most distinguishing parts of each face we compute the average face. This can be done using &lt;script type=&quot;math/tex&quot;&gt;\Psi = \frac{1}{M} \sum_{i=1}^{M} \Gamma_k&lt;/script&gt;. If we now subtract each face &lt;script type=&quot;math/tex&quot;&gt;\Gamma_k&lt;/script&gt; from the average face we are left with the most prominent parts of each input image. &lt;script type=&quot;math/tex&quot;&gt;\Phi_i = \Gamma_i - \Psi&lt;/script&gt; , &lt;script type=&quot;math/tex&quot;&gt;\Phi_i&lt;/script&gt; is the prominent image of each face. This is intuitive as we are taking each face and subtracting the qualities that are common between the face set.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/prominent.png&quot; alt=&quot;prominent&quot; class=&quot;center-image&quot; height=&quot;198px&quot; width=&quot;140px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As you can see in figure above, the prominent face only leaves the most important characteristics of a face that changes from person to person. You can see how the areas around the eyes and teeth are much lighter than their surroundings.&lt;/p&gt;
+
+&lt;p&gt;Now we have a set of points in a high dimensional space that represent each face most prominent features. This is now where we apply principle component analysis or PCA to find the most important eigenvectors that represent the distribution of our data without losing important information.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/pca.png&quot; alt=&quot;prominent&quot; class=&quot;center-image&quot; height=&quot;214px&quot; width=&quot;540px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As you can see in figure above, although initially the points were described in a three dimensional space, because most of the points are along a two dimensional plane we were able to find two orthogonal vectors otherwise known as principle components 
+or eigenvectors to describe the plane. If you define these components as the axis of a new space, you are able to make a subspace with reduced dimensions. This idea can be applied to our high dimensional data set and reduce the size of our data from &lt;script type=&quot;math/tex&quot;&gt;N^{2} \rightarrow  M&lt;/script&gt;dimensions. The efficiency gained by reducing the dimensions outweighs the data loss.&lt;/p&gt;
+
+&lt;p&gt;We use what is called a covariance matrix (Matrix C) which can be computed through &lt;script type=&quot;math/tex&quot;&gt;C = \frac{1}{M} \sum_{i=1}^{M} \Phi_i \Phi_i^T&lt;/script&gt;. This summation produces &lt;script type=&quot;math/tex&quot;&gt;\left[ \Phi_1^2 + \Phi_2^2 + ... \Phi_M^2 \right]&lt;/script&gt; which is the definition of variance.&lt;/p&gt;
+
+&lt;p&gt;Computing all the eigenvectors of a &lt;script type=&quot;math/tex&quot;&gt;N^{2}&lt;/script&gt; space can be very daunting for a computer, fortunately through PCA we know that we can use C, a M x M matrix to help us find these vectors much more quickly. By directly finding the eigenvectors of C we can use a formula to compute the respective eigenvectors of the data set. This can be done through: &lt;script type=&quot;math/tex&quot;&gt;u_i = A v_i&lt;/script&gt; where u represents the eigenface, A is the set of column vectors and v is the corresponding eigenvector of matrix C. This is how you find the eigenfaces. We can render these vectors by scaling them to 255. These eigenvectors are often slightly recognizable as faces, hence the name eigenfaces. Here is an example:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/eigen.png&quot; alt=&quot;prominent&quot; class=&quot;center-image&quot; height=&quot;198px&quot; width=&quot;139px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;reconstruction--recognition&quot;&gt;Reconstruction &amp;amp; Recognition&lt;/h3&gt;
+&lt;p&gt;Now that we have found all the eigenfaces we can essentially express every face in the high dimensional space as a sum of these eigenfaces. Therefore in theory we should be able to reconstruct every face fairly well although we will lose some quality due to our dimensionality reduction during PCA.&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\Omega = U^T (\Gamma - \Psi) =  \begin{bmatrix} \omega_1 \\ \omega_2 \\ \vdots \\ \omega_R \end{bmatrix}_{M \times 1}&lt;/script&gt;
+
+&lt;p&gt;We can figure out how to reconstruct the face using this formula which will return the weights of each eigenvector used. By using the weights and adding those eigenfaces we can reconstruct a face. In figure 6 above we can see how eigenfaces were used to reconstruct the original image on the left. The reconstructed image is slightly blurry due to PCA but the most important information is still intact.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/kek.png&quot; alt=&quot;prominent&quot; class=&quot;center-image&quot; height=&quot;311px&quot; width=&quot;611px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Then by looking at their weights and comparing those weights to the weights in the training faces, we can identify if in a certain input face was in the training set. We can systematically due to this by setting a certain threshold and calculating the euclidean distance. &lt;script type=&quot;math/tex&quot;&gt;\epsilon = \left\| \Phi - \Phi_f \right\|&lt;/script&gt;. If this distance is lower than the threshold we set we have successfully identified the face.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/omega.png&quot; alt=&quot;prominent&quot; class=&quot;center-image&quot; height=&quot;288px&quot; width=&quot;502px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
+&lt;p&gt;Although eigenfaces are a successful method of facial recognition, it is not the best out there. Some of the drawbacks of eigenfaces are how the set of images must be taken under the same scenario. For example input images where the lighting is different could significantly affect the eigenvectors this could result in the system starting to identifying faces from their light levels instead of their faces. A more effective form of facial recognition would be to treat the face as a three dimensional object instead of two dimensional like we did with an image. This allows would allow us to recognize an image from multiple angles and would not be affected from lighting as well as light can be manipulated in the three dimensional world.&lt;/p&gt;
+
+&lt;p&gt;Overall, facial recognition has proved to be a very useful tool in many areas of life. For example facial recognition can be used for security, social media, or targeted advertising. As we rely more and more on sensory technology to help us interact with our surroundings, it is important for us to create better facial recognition systems.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/johnguibas/eigenfaces&quot;&gt;github/code&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 01 Nov 2017 00:00:00 -0700</pubDate>
+        <link>http://localhost:4000/2017-11-01/eigenfaces/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-11-01/eigenfaces/</guid>
+      </item>
+    
+  </channel>
+</rss>

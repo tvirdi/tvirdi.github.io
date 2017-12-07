@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Generative Adversarial Network Explained</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
+
+  <!-- Font -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed for twopointseven" href="/feed.xml" />
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>The Generative Adversarial Network Explained | twopointseven.github.io</title>
+<meta property="og:title" content="The Generative Adversarial Network Explained" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this post, we explore the architecture of the GAN and its ability to generate images no one has seen before." />
+<meta property="og:description" content="In this post, we explore the architecture of the GAN and its ability to generate images no one has seen before." />
+<link rel="canonical" href="http://localhost:4000/2017-11-11/gan/" />
+<meta property="og:url" content="http://localhost:4000/2017-11-11/gan/" />
+<meta property="og:site_name" content="twopointseven.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-11T00:00:00-08:00" />
+<script type="application/ld+json">
+{"name":null,"description":"In this post, we explore the architecture of the GAN and its ability to generate images no one has seen before.","author":null,"@type":"BlogPosting","url":"http://localhost:4000/2017-11-11/gan/","image":null,"publisher":null,"headline":"The Generative Adversarial Network Explained","dateModified":"2017-11-11T00:00:00-08:00","datePublished":"2017-11-11T00:00:00-08:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017-11-11/gan/"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+
+  <!-- Google Analytics -->
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', '', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+
+
+</head>
+
+<body>
+  <div class="content-container">
+    <header>
+  <div class="header-small">
+    <a href="http://localhost:4000">twopointseven</a>
+  </div>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<div class="post">
+  <div class="post-title">The Generative Adversarial Network Explained</div>
+  <span class="post-date">
+    <time>11 Nov 2017</time>
+  </span>
+  <div class="post-tag">
+    <ul>
+      
+    </ul>
+  </div>
+
+  <p><strong>November 11th 2017</strong> - John Guibas &amp; Tejpal Virdi</p>
+
+<p>In our previous blog post we discussed the effectiveness of Neural Networks for image classification tasks comparable to humans. However, how good are neural networks at being creative? Here we explore the Generative Adversarial Network: the most effective generative model used today.</p>
+
+<p>The Generative Adversarial Network is made up of two networks. One network is known as the discriminator and the other is the generator. The main idea behind the GAN is to have these two networks compete with each other. The discriminator is tasked to identify between real and fake samples of a certain class of image, while the generator tries to produce more realistic images that fool the discriminator. The two networks are trained simultaneously, and the idea is that the competition will drive them to produce synthetic data that is indistinguishable from fake data.</p>
+
+<p><img src="/images/bedroom.png" alt="exampleimgs" class="center-image" height="312px" width="619px" /></p>
+
+<h3 id="discriminator">Discriminator</h3>
+<p>The discriminator is essentially a standard CNN like from our previous blog post. It is a binary classifier, meaning that there is only one output node representing a value from 0-1, which indicates the probability of it being real or fake. A probability of 0.5 will mean that the discriminator cannot tell if the input was real or fake. We can respectively subtract this value from 1 to get the corresponding opposite probability. The discriminator uses the cross entropy loss formula denoted as:</p>
+
+<script type="math/tex; mode=display">H(p,q) = \sum_{i}^{n} p_{i} * log(q_{i})</script>
+
+<h3 id="generator">Generator</h3>
+<p>The generator is a deconvolutional network. Just as the name suggests, it essentially works in a reverse manner to the standard convolutional neural network. Instead of reducing an image into a lower dimensionality for feature extraction, as did the CNN, the generator takes in a random noise vector as up-samples it.</p>
+
+<p>The deconvolutional network has the three main layers: deconvolution, unpooling, and ReLU. The deconvolutional layer starts off with a feature map and for each pixel value, it maps it to a square kernel, upsampling the image. This is done for each feature map and can be thought of as a matrix multiplication between the transpose of the whole filter matrix and the input. This is what it looks like:</p>
+
+<p><img src="/images/gan-animation.gif" alt="Deconv" class="center-image" height="449px" width="395px" /></p>
+
+<p>For unpooling, we must revert the pooling operation by going from a single pixel to a 2x2 array of pixels. However, it is impossible to do this accurately based off guessing. Instead, our network uses switch variables to memorize the pooling operations from the convolutional layer to accurately reconstruct the image.</p>
+
+<p>The last layer is simply applying the ReLU to add a nonlinearity. The ReLU is simply an activation function and does not change the resolution of the image. See the blog post on CNNs for more information on ReLUs.</p>
+
+<h3 id="adversarial-training">Adversarial Training</h3>
+<p>The fascinating part of GANs is its use of adversarial training. Meaning, the generator and discriminator networks act as adversaries in terms of their loss functions. This is based off of the minimax game in Game Theory.</p>
+
+<p>The distributions, p and q, are given by our example training data and the generator, where the training data refers to real, and the generated images refer to fake. Because we only have two classes, the loss function can be simplified to the binary cross entropy function:</p>
+
+<script type="math/tex; mode=display">H((x_{1},y_{1}),D) = -y_{1}*log(D(x_{1})) - (1-y_{1})*log(1-D(x_{1}))</script>
+
+<p>X1 represents one input data point and y1 represents our label (not the entire dataset). However, because we feed the discriminator exactly half real and half fake data, we need to encode this probability, the loss function therefore becomes:</p>
+
+<script type="math/tex; mode=display">H((x_{i},y_{i}),D) = -\frac{1}{2} y_{i}*log(D(x_{i})) - \frac{1}{2}(1-y_{i})*log(1-D(x_{i}))</script>
+
+<p>We first train the discriminator with training data (we used MNIST). The input is passed through a series of convolutional layers (downsampling the image to extract features) and ReLUs, ending with a Sigmoid activation. The loss is computed using the original MNIST labels. Next, the generator model is called on a random noise and the output of that is run through the discriminator, computing the loss (The output is compared with a set of fake labels). We then do backprop on the discriminator, given that it has now analyzed both real and fake images.</p>
+
+<p>Next, we must train the generator. We have it produce images given random input and put those synthetic images through the discriminator, giving us a loss. We use this loss to perform backprop on the generator model and repeat this whole process for a given number of epochs. The code for this process is broken down below</p>
+
+<h2 id="code">Code</h2>
+
+<h5 id="full-implementation-httpsgithubcomtejpalvpytorch-basicsblobmasterganpy">Full Implementation: <a href="https://github.com/tejpalv/pytorch-basics/blob/master/gan.py">https://github.com/tejpalv/pytorch-basics/blob/master/gan.py</a></h5>
+
+<h5 id="imports">Imports</h5>
+<script src="https://gist.github.com/twopointseven/b110f01b84d6a0d299ed76943104a5e8.js"></script>
+
+<h5 id="hyperparameters-and-loading-data">Hyperparameters and Loading Data</h5>
+<script src="https://gist.github.com/twopointseven/f64a611450fce47b148e80fce3f20693.js"></script>
+
+<h5 id="discriminator-1">Discriminator</h5>
+<script src="https://gist.github.com/twopointseven/5acf458bbda2d5f26b76b54344e8b232.js"></script>
+
+<h5 id="generator-1">Generator</h5>
+<script src="https://gist.github.com/twopointseven/d5ff137604c4a7ad5895daaefb712e66.js"></script>
+
+<h5 id="loss-function-and-optimizer">Loss function and Optimizer</h5>
+<script src="https://gist.github.com/twopointseven/5a3a0b802f5ae31e70184c5cb06e98d2.js"></script>
+
+<h5 id="training">Training</h5>
+<script src="https://gist.github.com/twopointseven/abedbce79114a245c65609a90270e451.js"></script>
+
+<h5 id="save-images">Save Images</h5>
+<script src="https://gist.github.com/twopointseven/38daa858167c82029057dab6055faf7d.js"></script>
+
+
+
+  <!-- Disqus -->
+  
+  <div class="post-disqus">
+      <section id="disqus_thread"></section>
+      <script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables */
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//twopointseven.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  </div>
+  
+
+</div>
+
+
+    <!-- Documents about icons are here: http://fontawesome.io/icons/ -->
+<div class="footer">
+  <hr />
+  <div class="footer-link">
+    
+	
+	
+	
+	
+
+    
+
+    
+	
+	
+	
+	
+
+    
+	
+	
+	
+	
+	
+	
+	
+	
+
+    
+
+    
+
+    
+    <a href="mailto:tejpalv8@gmail.com,jtgg01@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></i></a>
+    
+
+  </div>
+  © 2017 twopointseven. All rights reserved.
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+</body>
+</html>
+

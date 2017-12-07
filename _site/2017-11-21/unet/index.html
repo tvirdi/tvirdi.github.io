@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Towards an Autonomous Car using Computer Vision</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
+
+  <!-- Font -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed for twopointseven" href="/feed.xml" />
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>Towards an Autonomous Car using Computer Vision | twopointseven.github.io</title>
+<meta property="og:title" content="Towards an Autonomous Car using Computer Vision" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Vehicle detection and Depth Estimation are important steps towards building an autonomous car. We utilize a U-Net segmentation network to segment out vehicles given a 2d image and then train a CNN to learn depth from stereo images." />
+<meta property="og:description" content="Vehicle detection and Depth Estimation are important steps towards building an autonomous car. We utilize a U-Net segmentation network to segment out vehicles given a 2d image and then train a CNN to learn depth from stereo images." />
+<link rel="canonical" href="http://localhost:4000/2017-11-21/unet/" />
+<meta property="og:url" content="http://localhost:4000/2017-11-21/unet/" />
+<meta property="og:site_name" content="twopointseven.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-21T00:00:00-08:00" />
+<script type="application/ld+json">
+{"name":null,"description":"Vehicle detection and Depth Estimation are important steps towards building an autonomous car. We utilize a U-Net segmentation network to segment out vehicles given a 2d image and then train a CNN to learn depth from stereo images.","author":null,"@type":"BlogPosting","url":"http://localhost:4000/2017-11-21/unet/","image":null,"publisher":null,"headline":"Towards an Autonomous Car using Computer Vision","dateModified":"2017-11-21T00:00:00-08:00","datePublished":"2017-11-21T00:00:00-08:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017-11-21/unet/"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+
+  <!-- Google Analytics -->
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', '', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+
+
+</head>
+
+<body>
+  <div class="content-container">
+    <header>
+  <div class="header-small">
+    <a href="http://localhost:4000">twopointseven</a>
+  </div>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<div class="post">
+  <div class="post-title">Towards an Autonomous Car using Computer Vision</div>
+  <span class="post-date">
+    <time>21 Nov 2017</time>
+  </span>
+  <div class="post-tag">
+    <ul>
+      
+    </ul>
+  </div>
+
+  <p><strong>November 21st 2017</strong> - John Guibas &amp; Tejpal Virdi</p>
+
+<h3 id="introduction">Introduction</h3>
+<p>The use of Deep Learning in autonomous cars has made profound improvements in the last few years. Computer Vision techniques have allowed us to pull down the hefty price of autonomous cars by using 2d cameras, rather than lidars or other complex sensors. In this blog post, we will look into two of the most important tasks in this domain: vehicle detection and depth estimation.</p>
+
+<p>Semantic segmentation or detection involves partitioning an image into objects that are significant. This task has been heavily explored in Deep Learning with various architectures and datasets. Convolutional Neural Networks are unable to do this due to their pooling layers. Pooling compromises spatial representation, a necessary feature for segmentation since the location of the object in the image is important. On the contrary, Fully Convolutional Networks (FCNs) are extremely inefficient since the dimensionality of the input is never reduced, and thus passing a large number of parameters through the network. Researchers ended up finding a solution with the use of autoencoders. Autoencoders simplify the representation of the input with an encoder but then recover the details with a decoder. A popular autoencoder network used for segmentation is the U-Net.</p>
+
+<p>The current popular approach for depth estimation while driving is through a 3d camera, such as a LiDAR. This sensor projects a laser onto objects in its view and measures the time it takes for the laser to come back to the sensor. This method is extremely accurate but the problem is that they are very expensive, with an average cost of $8,000 (previously $75,000 but Waymo changed this earlier this year). This price is not low enough for large-scale manufacturing and common use of driverless cars. However, recent developments in Computer Vision for depth estimation have allowed us to perform these tasks using a 2D camera (&lt;$100).</p>
+
+<p><img src="/images/depthmap.jpg" alt="DepthMap" class="center-image" height="160px" width="637px" /></p>
+
+<p>In this post, we’ll use the classic Convolutional Neural Network to estimate depth given a road image. To do this, we must feed in road images with corresponding depth maps. We automate this process further by using stereoscopic images to create the depth maps algorithmically.</p>
+
+<h3 id="segmentation">Segmentation</h3>
+<p>The encoder part of the U-Net is a standard ConvNet, which consists of a series of convolutional layers along with ReLU nonlinearities and max pooling operations. The output is a feature map that contains all the important information of the input image. The upsampling path involves a series of up-convolutions concatenated with the obtained feature maps, normal convolutions, and ReLU nonlinearities. This may seem like a standard convolutional autoencoder but the one thing that distinguishes it are the skip connections between parallel layers, where feature maps from the down convolutional process are concatenated to the corresponding feature maps in the up-convolutional process. The purpose of this is to retain the original important features since some are still present in the segmentation. Here is the exact architecture:</p>
+
+<p><img src="/images/unet.png" alt="Filters" class="center-image" height="518px" width="777px" /></p>
+
+<p>The original U-Net paper had the goal of segmenting biomedical images but this architecture has been seen to work for other segmentation tasks. We specifically utilize this segmentation network for detecting a car in a driving scene. We train the U-Net on 22,000 frames from a dashcam-video provided by Udacity. The many thousands of images show the network a large variance, meaning it does not look for the same exact car every time. Instead, it learns specific features found in every car, as low as certain edges and corners. This adaptation to new environments is crucial for a successful autonomous car.</p>
+
+<h3 id="depth-estimation">Depth Estimation</h3>
+<p>Humans are able to see depth due to their binocular vision. Each of our eyes inputs an image to our brain but these images are not exactly the same. Since our eyes are not located on the same point in space (parallax), there  exists some offset between the images. In Computer Vision, these 2d images are known as stereo images.</p>
+
+<p>Given two stereo images, one can calculate a disparity map, which is simply the difference between the two images. Using geometry, it is evident that the depth is inversely proportional to the depth.</p>
+
+<p><img src="/images/calculatingdepth.png" alt="Filters" class="center-image" height="209px" width="425px" /></p>
+
+<p>In code:
+<script src="https://gist.github.com/tejpalv/f3267e232944363adb60b60653465616.js"></script></p>
+
+<p>We then take one of the stereo images, along with its corresponding depth map, and feed it into a vanilla CNN.  Once trained, we can do single-image depth estimation in real-time. Here is a review of the CNN architecture:</p>
+
+<p><img src="/images/cnn.png" alt="Filters" class="center-image" height="229px" width="792px" /></p>
+
+<h3 id="results">Results</h3>
+<p><img src="/images/vehicle.png" alt="Filters" class="center-image" height="151px" width="629px" />
+<br />
+<img src="/images/a.jpg" alt="Filters" class="center-image" height="192px" width="640px" />
+<br />
+<img src="/images/b.jpg" alt="Filters" class="center-image" height="192px" width="640px" />
+<br />
+Trained on implementation from <a href="https://github.com/mrharicot/monodepth">here</a> and <a href="https://github.com/udacity/self-driving-car">here</a></p>
+
+<h2 id="u-net-code">U-Net Code</h2>
+
+<h5 id="full-implementation-httpsgithubcomtejpalvu-net">Full Implementation: <a href="https://github.com/tejpalv/u-net">https://github.com/tejpalv/u-net</a></h5>
+
+<h3 id="imports">Imports</h3>
+<script src="https://gist.github.com/tejpalv/d41f2c8647b26d890d30b8cc7d8a4869.js"></script>
+
+<h3 id="dataset">Dataset</h3>
+<script src="https://gist.github.com/tejpalv/88d57ce08340a3b3887847a906c9202b.js"></script>
+
+<h3 id="hyperparameters">Hyperparameters</h3>
+<script src="https://gist.github.com/tejpalv/4e08e4ce96c6d49038def9f60418ab93.js"></script>
+
+<h3 id="conv-2x2">Conv 2x2</h3>
+<script src="https://gist.github.com/tejpalv/ea03a39587a6cf8862aa4bf2af780a7b.js"></script>
+
+<h3 id="upsample">Upsample</h3>
+<script src="https://gist.github.com/tejpalv/7e7e852cf9bca0ff350caefd9d8d8ca7.js"></script>
+
+<h3 id="model">Model</h3>
+<script src="https://gist.github.com/tejpalv/3aeff48767e212d716b5e0582d2c78b4.js"></script>
+
+<h3 id="init-optimizer-and-loss">Init, Optimizer, and Loss</h3>
+<script src="https://gist.github.com/tejpalv/31bb9a9bb2b09f2fbc43db285f876613.js"></script>
+
+<h3 id="training">Training</h3>
+<script src="https://gist.github.com/tejpalv/99e526e5087bd4496fc4f278f5a05ff8.js"></script>
+
+
+
+  <!-- Disqus -->
+  
+  <div class="post-disqus">
+      <section id="disqus_thread"></section>
+      <script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables */
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//twopointseven.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  </div>
+  
+
+</div>
+
+
+    <!-- Documents about icons are here: http://fontawesome.io/icons/ -->
+<div class="footer">
+  <hr />
+  <div class="footer-link">
+    
+	
+	
+	
+	
+
+    
+
+    
+	
+	
+	
+	
+
+    
+	
+	
+	
+	
+	
+	
+	
+	
+
+    
+
+    
+
+    
+    <a href="mailto:tejpalv8@gmail.com,jtgg01@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></i></a>
+    
+
+  </div>
+  © 2017 twopointseven. All rights reserved.
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+</body>
+</html>
+

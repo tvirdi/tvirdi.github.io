@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A Simple Neural Network</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
+
+  <!-- Font -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed for twopointseven" href="/feed.xml" />
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>A Simple Neural Network | twopointseven.github.io</title>
+<meta property="og:title" content="A Simple Neural Network" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Over the last weekend, we committed ourselves to learning exactly how a neural network (NNs) works. This intro blog post will teach you everything you need to get a straightforward neural net running." />
+<meta property="og:description" content="Over the last weekend, we committed ourselves to learning exactly how a neural network (NNs) works. This intro blog post will teach you everything you need to get a straightforward neural net running." />
+<link rel="canonical" href="http://localhost:4000/2017-11-05/nn/" />
+<meta property="og:url" content="http://localhost:4000/2017-11-05/nn/" />
+<meta property="og:site_name" content="twopointseven.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-05T00:00:00-07:00" />
+<script type="application/ld+json">
+{"name":null,"description":"Over the last weekend, we committed ourselves to learning exactly how a neural network (NNs) works. This intro blog post will teach you everything you need to get a straightforward neural net running.","author":null,"@type":"BlogPosting","url":"http://localhost:4000/2017-11-05/nn/","image":null,"publisher":null,"headline":"A Simple Neural Network","dateModified":"2017-11-05T00:00:00-07:00","datePublished":"2017-11-05T00:00:00-07:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017-11-05/nn/"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+
+  <!-- Google Analytics -->
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', '', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+
+
+</head>
+
+<body>
+  <div class="content-container">
+    <header>
+  <div class="header-small">
+    <a href="http://localhost:4000">twopointseven</a>
+  </div>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<div class="post">
+  <div class="post-title">A Simple Neural Network</div>
+  <span class="post-date">
+    <time>05 Nov 2017</time>
+  </span>
+  <div class="post-tag">
+    <ul>
+      
+    </ul>
+  </div>
+
+  <p><strong>November 5th 2017</strong> - John Guibas &amp; Tejpal Virdi</p>
+
+<p>Over the last weekend, we committed ourselves to learning exactly how a neural network (NNs) works. This intro blog post will teach you everything you need to get a straightforward neural net running. To start off, here is what the architecture of a simple 2-layer NN looks like:</p>
+
+<p><img src="/images/net.png" alt="Architecture" class="center-image" height="350px" width="350px" /></p>
+
+<p>The learning process in neural nets has two parts: A forward pass and a backward pass. As seen in the diagram above, the inputs go through each layer in the forward pass until reaching the output layer. From there, each output node passes information back through the network to make adjustments for the next forward pass.</p>
+
+<h3 id="forward-pass">Forward Pass</h3>
+
+<p>The first layer of a neural network is the input layer and each input node in the input layer is connected to every hidden node (fully-connected). 
+For each connection between nodes in the input and hidden layers, there is a individual weight matrix that the input is multiplied by. The output of this multiplication is summed across all other connections to the same node. This can be simply expressed as neat matrix multiplications between the input and weights matrices. For example, if our input matrix is of size 1x3, and our weights matrix would be of size 3x5, we would have 15 individual connections.</p>
+
+<p>The next step of the forward pass is applying the sigmoid function on the values obtained from the multiplication between the input and first weights matrices. The sigmoid function is:</p>
+
+<script type="math/tex; mode=display">\frac{1}{1 + e^{-x}}</script>
+
+<p>and maps the input into a value from 0 to 1, also adding a nonlinearity to the model. The sigmoid function is what ultimately allows us to curve fit to our desired function.</p>
+
+<p>We have now finished the pass from input times weights times sigmoid. If you are familiar with Biology, this can be visualized as a neuron. The dendrites are the input and weights, the cell body is the multiiplication and activation, and the output axon is the sum of the multiplications.</p>
+
+<p><img src="/images/node.png" alt="Node" class="center-image" height="350px" width="350px" /></p>
+
+<p>We then repeat how we passed the data through the input nodes to HL1 (hidden layer 1) when going from HL1 to Hl2. We multiply the hidden layer 1 values with a second weights matrix and apply the sigmoid function. To go from the HL2 to the output layer, we repeat the process again.</p>
+
+<h3 id="backpropagation">Backpropagation</h3>
+
+<p>Once we have our output, we need to evaluate how well the weights did in the forward pass. Using the training data as labels, we can calculate the loss using a formula known as mean squared error:</p>
+
+<script type="math/tex; mode=display">\frac{(truth - output)^{2}}{2}</script>
+
+<p>Using this loss and basic calculus, we can approximate how we need to adjust our weights to minimize the loss. Our goal is to find how much the loss will change from a change in the weights, or:</p>
+
+<script type="math/tex; mode=display">\frac{dL}{dW}</script>
+
+<p>This term expresses how much the loss increases or decreases when we make a small change to a weight. By following how we evaluated our loss and applying the chain rule, we can calculate this term. Going backwards, the most final function we apply to get our error is MSE. Using the power rule we can calculate the derivative of this function:</p>
+
+<script type="math/tex; mode=display">E_{total} = \frac{1}{2} * (target_{0} - output_{0})^{2} + \frac{1}{2} * (target_{1} - output_{1})^{2} + \frac{1}{2} * (target_{2} - output_{2})^{2}</script>
+
+<script type="math/tex; mode=display">\frac{dE_{total}}{dOutput_{0}} = 2 * \frac{1}{2} * (target - output)^{2-1} * -1 + 0 + 0</script>
+
+<script type="math/tex; mode=display">\frac{dE_{total}}{dOutput_{0}} = output_{0} - target_{0}</script>
+
+<p>Next, we must calculate the derivative of step before we calculate the output, which was the sigmoid function:</p>
+
+<script type="math/tex; mode=display">out_{0} = \frac{1}{1+e^{-out_{0_{presig}}}}</script>
+
+<script type="math/tex; mode=display">\frac{dout_{0}}{dout_{0_{presig}}} = out_{0} * (1 - out_{0})</script>
+
+<p>Finally, we calculate how the weight influenced the output (pre-sigmoid):</p>
+
+<script type="math/tex; mode=display">out_{presig} = w_{0} * h1_{0} + w_{1} * h1_{1} ...</script>
+
+<script type="math/tex; mode=display">\frac{dout_{presig}}{dw_{0}} = h1_{0}</script>
+
+<p>Now that we have seperated calculated the derivative of each “chained” function, we can finally calculate the derivative between the loss and weight 0:</p>
+
+<script type="math/tex; mode=display">\frac{dE_{total}}{dw_{0}} = \frac{dE_{total}}{dOutput_{0}} * \frac{dout_{0}}{dout_{0_{presig}}} * \frac{dout_{presig}}{dw_P0}</script>
+
+<script type="math/tex; mode=display">\frac{dE_{total}}{dw_{0}} = (output_{0} - target_{0}) * output_{0} * (1 - output_{0}) * h1</script>
+
+<p>To update each individual weight, we apply the formula appropiately and calculate the new weight through:</p>
+
+<script type="math/tex; mode=display">w_{0} = w_{0} + (w_{0} * \frac{dE}{dw_{0}} * learningrate)</script>
+
+<p>We had some extra time so we wrote it out…(it was 3am at a hackathon in our math classroom)
+<br />
+<br />
+<img src="/images/backprop.JPG" alt="image-title-here" class="center-image" height="325px" width="500px" />
+<br />
+<br /></p>
+<h5 id="full-implementation-httpsgithubcomtejpalvpytorch-basicsblobmasternnpy">Full Implementation: <a href="https://github.com/tejpalv/pytorch-basics/blob/master/nn.py">https://github.com/tejpalv/pytorch-basics/blob/master/nn.py</a></h5>
+
+<h3 id="imports">Imports</h3>
+
+<script src="https://gist.github.com/johnguibas/c4fb4f01eb27ce17dd41780713fcc7ff.js"></script>
+
+<h3 id="datatype">Datatype</h3>
+<script src="https://gist.github.com/johnguibas/68af7c1a6d4d667ce126160a6cdb57a0.js"></script>
+
+<h3 id="hyperparameters">Hyperparameters</h3>
+<script src="https://gist.github.com/johnguibas/8a450e40c06bdc0f230409bbc384bdb1.js"></script>
+
+<h3 id="input-output-and-weights">Input, Output, and Weights</h3>
+<script src="https://gist.github.com/johnguibas/f82a708cd8a9d59258a1276025655963.js"></script>
+
+<h3 id="training">Training</h3>
+<script src="https://gist.github.com/johnguibas/15c2e09a5d30ed152228718a2b073678.js"></script>
+
+
+
+  <!-- Disqus -->
+  
+  <div class="post-disqus">
+      <section id="disqus_thread"></section>
+      <script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables */
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//twopointseven.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  </div>
+  
+
+</div>
+
+
+    <!-- Documents about icons are here: http://fontawesome.io/icons/ -->
+<div class="footer">
+  <hr />
+  <div class="footer-link">
+    
+	
+	
+	
+	
+
+    
+
+    
+	
+	
+	
+	
+
+    
+	
+	
+	
+	
+	
+	
+	
+	
+
+    
+
+    
+
+    
+    <a href="mailto:tejpalv8@gmail.com,jtgg01@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></i></a>
+    
+
+  </div>
+  © 2017 twopointseven. All rights reserved.
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+</body>
+</html>
+

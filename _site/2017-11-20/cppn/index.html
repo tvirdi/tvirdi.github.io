@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generating Patterns from Compositional Pattern Producing Networks</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
+
+  <!-- Font -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono" rel="stylesheet">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed for twopointseven" href="/feed.xml" />
+  <!-- Begin Jekyll SEO tag v2.3.0 -->
+<title>Generating Patterns from Compositional Pattern Producing Networks | twopointseven.github.io</title>
+<meta property="og:title" content="Generating Patterns from Compositional Pattern Producing Networks" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Exploring the effectiveness at untrained neural networks generating art." />
+<meta property="og:description" content="Exploring the effectiveness at untrained neural networks generating art." />
+<link rel="canonical" href="http://localhost:4000/2017-11-20/cppn/" />
+<meta property="og:url" content="http://localhost:4000/2017-11-20/cppn/" />
+<meta property="og:site_name" content="twopointseven.github.io" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-20T00:00:00-08:00" />
+<script type="application/ld+json">
+{"name":null,"description":"Exploring the effectiveness at untrained neural networks generating art.","author":null,"@type":"BlogPosting","url":"http://localhost:4000/2017-11-20/cppn/","image":null,"publisher":null,"headline":"Generating Patterns from Compositional Pattern Producing Networks","dateModified":"2017-11-20T00:00:00-08:00","datePublished":"2017-11-20T00:00:00-08:00","sameAs":null,"mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017-11-20/cppn/"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+
+  <!-- Google Analytics -->
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', '', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+
+
+</head>
+
+<body>
+  <div class="content-container">
+    <header>
+  <div class="header-small">
+    <a href="http://localhost:4000">twopointseven</a>
+  </div>
+</header>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+
+
+<div class="post">
+  <div class="post-title">Generating Patterns from Compositional Pattern Producing Networks</div>
+  <span class="post-date">
+    <time>20 Nov 2017</time>
+  </span>
+  <div class="post-tag">
+    <ul>
+      
+    </ul>
+  </div>
+
+  <p><strong>November 20th 2017</strong> - John Guibas &amp; Tejpal Virdi</p>
+
+<h3 id="introduction">Introduction</h3>
+<p>Modern generative models, including DCNN’s, GAN’s, and VAE’s, try to produce an entire image at once. However, as we scale the resolution of these images, the memory constraints of our network exponentially meet their limit. As a result, most images produced from generative models today barely meet a size over 500,000 pixels. For a 3-channel image, that’s only ~410x410.</p>
+
+<p>Compositional Pattern-Producing Networks (CPPNs) address this problem (although they are probably not the best for regular image-generation purposes). Instead of generating the entire image at once, CPPNs take an iterative approach to the problem: they generate pixels one by one. These networks take the location of the pixel as input, theoretically allowing for these networks to produce images of any desired resolution given that you input all the locations.</p>
+
+<p>One cool thing about these networks is that even if they are not trained, they produce really interesting patterns that are not just the resemblance of random noise (what you would expect from a random ANN). Here are some examples of images we produced using our CPNN in PyTorch (github):</p>
+
+<p><img src="/images/lmao.png" alt="galley" class="center-image" height="355px" width="757px" /></p>
+
+<h3 id="cpnn-architecture">CPNN Architecture</h3>
+
+<p><img src="/images/model.png" alt="model" class="center-image" height="562px" width="800px" /></p>
+
+<p>As mentioned above, the CPNN takes in the location as two of its inputs. Another value it takes is the radius of the location, or r= sqrt(x^2 + y^2). This value is essential to the quality of images produced, as it helps the network generate circular patterns without having to curve-fit to such function (highly unlikely without training). The network also takes a latent space vector, which is essentially a series of n elements that are essentially just random variables inputted into the network.</p>
+
+<p>Why do we need such a thing? We really don’t, but it’s nice to have around as by exploring the images in the R dimensions of that vector, we can explore a large amount of images without modifying the weights in the network. In bigger networks, simply modifying one weight won’t be enough compared to changing a value in the latent vector. Also, because our NN is a continuous function, if we adjust the latent vectors position continuously, our output will also be continuous; this leads to cool animations where we can see our network explore the latent space:</p>
+
+<p><img src="/images/cppn.gif" alt="gif" class="center-image" height="256px" width="256px" /></p>
+
+<h3 id="generated-images">Generated Images</h3>
+
+<p>Because our weights are completely random, the non-linearities/activation functions, network depth/size have a big difference in what types are produced by the network. Another interesting fact about these images are that even if I scale the resolution of the image dramatically, overall the image looks the same if I use the same weights. It is important to note that these weights are completely random, and it is quite surprising that they don’t simply produce noise. Anyways, here are a collection of images we produced using a variety of hyperparameters / architectural modifications on our CPPN network:</p>
+
+<p><img src="/images/lmao.png" alt="examples" class="center-image" height="355px" width="757px" /></p>
+
+<p>We can observe how as we increase the amount of channels, the more complex the image becomes. The images more and more start  to look the same.</p>
+
+<p><img src="/images/32chan.png" alt="32chan" class="center-image" height="212px" width="757px" /></p>
+
+<p>We also experimented with how well the images kept form if I tried to generate the same image at a higher resolution (using the same weights). We can observe how overall the image stays the same and how CPPN’s are resolution invariant.</p>
+
+<p><img src="/images/upscaling.png" alt="upscaling" class="center-image" height="456px" width="786x" /></p>
+
+<p>Overall, we can notice that the image has seem to gotten sharper while maintaing the overall strcture.</p>
+
+<h3 id="code">Code</h3>
+
+<h5 id="full-implementation-httpsgithubcomjohnguibascppn-art">Full Implementation: <a href="https://github.com/johnguibas/cppn-art">https://github.com/johnguibas/cppn-art</a></h5>
+
+<h4 id="imports">Imports</h4>
+
+<script src="https://gist.github.com/johnguibas/44ab17da752d3f848c7bb98a831f4390.js"></script>
+
+<h4 id="hyperparameters">Hyperparameters</h4>
+<script src="https://gist.github.com/johnguibas/18174b532fe47c72b26353e58e9616c4.js"></script>
+
+<script src="https://gist.github.com/johnguibas/94613d6d6aff6153b7ed1238e419f1e3.js"></script>
+
+<h4 id="model">Model</h4>
+<script src="https://gist.github.com/johnguibas/b7cb339a790407e131757b265b95a914.js"></script>
+
+<h4 id="creating-input">Creating Input</h4>
+<script src="https://gist.github.com/johnguibas/28672a6665ce464dfca079c7cb3d8482.js"></script>
+
+<h4 id="forming-the-image">Forming the Image</h4>
+<script src="https://gist.github.com/johnguibas/b371c1f8d7f0338f369e605fb258408d.js"></script>
+
+<h4 id="reshape">Reshape</h4>
+<script src="https://gist.github.com/johnguibas/d684edfec051b94cffe96917544cb805.js"></script>
+
+<h4 id="output">Output</h4>
+<script src="https://gist.github.com/johnguibas/6d95a4eec8cc6f86726258cbd2c45018.js"></script>
+
+
+
+  <!-- Disqus -->
+  
+  <div class="post-disqus">
+      <section id="disqus_thread"></section>
+      <script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables */
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//twopointseven.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+  </div>
+  
+
+</div>
+
+
+    <!-- Documents about icons are here: http://fontawesome.io/icons/ -->
+<div class="footer">
+  <hr />
+  <div class="footer-link">
+    
+	
+	
+	
+	
+
+    
+
+    
+	
+	
+	
+	
+
+    
+	
+	
+	
+	
+	
+	
+	
+	
+
+    
+
+    
+
+    
+    <a href="mailto:tejpalv8@gmail.com,jtgg01@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></i></a>
+    
+
+  </div>
+  © 2017 twopointseven. All rights reserved.
+</div>
+
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+</body>
+</html>
+
