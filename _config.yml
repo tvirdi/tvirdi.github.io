@@ -3,15 +3,15 @@
 # # # # # # # # # # # # #
 
 # Basic
-name:               "twopointseven"
+name:               "Tejpal Virdi"
 
 author:
   twitter:          
-  email:            tejpalv8@gmail.com,jtgg01@gmail.com
+  email:            tejpalv8@gmail.com
 
 copyright:
   year:             2017
-  name:             twopointseven
+  name:             Tejpal Virdi
 
 # Google-analytics
 google-analytics:
@@ -19,7 +19,7 @@ google-analytics:
 
 # Disqus
 disqus:
-  id:               "twopointseven"
+  id:               "Tejpal"
 
 # URL
 url:                "https://tvirdi.github.io" # the base hostname & protocol for your site
@@ -47,6 +47,12 @@ kramdown:
 nav:
   - name:           "about"
     url:            "/about"
+  - name:           "Archive"
+    url:            "/archive"
+  - name:           "Tags"
+    url:            "/tags"
+  - name:           "Github"
+    url:            "https://github.com/AWEEKJ/Kiko-plus"
 
 
 # Sass

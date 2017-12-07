@@ -3,7 +3,7 @@ layout: post
 title: Facial Recognition through Eigenfaces
 description: "This blog post demonstrates the process of analyzing a set of images with the goal of identifying an average face, prominent face, eigenface, and recognition system using eigenvectors."
 ---
-**October 5th 2017** - John Guibas & Tejpal Virdi
+**October 5th 2017** - Tejpal Virdi
 
 ### Introduction
 This blog post demonstrates the process of analyzing a set of images with the goal of identifying an average face, prominent face, eigenface, and recognition system. The process utilizes the mathematical concepts of matrices, eigenvalues, and eigenfaces (formally known as eigenvectors) with the goal of reducing a high-dimensional space from a large data set of pixel values. The eigenfaces (eigenvectors) compose a face space (eigenspace) in which a variance is identifiable and can be operated on through the process of Principal Component Analysis. Each image is read by its pixel’s grayscale values from 0-255. The process of face recognition through eigenfaces differs from other face recognition processes since features are not visualized in 3D space and distinctive features (nose, ears, eyes, etc.) are not identified.

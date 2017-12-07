@@ -3,16 +3,10 @@ layout: default
 ---
 
 <header class="header">
-  <center>
   <div class="header-title">
     <a href="{{ site.url }}{{ site.baseurl }}">{{ site.name }}</a>
-
   </div>
-  <a size="3" href="https://github.com/johnguibas" style="color: #808080">john guibas</a>
-  <font size="3" color="Gray">and</font>
-  <a size="3" href="https://github.com/tejpalv" style="color: #808080">tejpal virdi</a>
-
-<!--   <nav class="header-nav">
+  <nav class="header-nav">
     {% for nav in site.nav %}
     {% if nav.url contains 'http://' or nav.url contains 'https://' %}
     <a href="{{ nav.url }}">{{ nav.name }}</a>
@@ -20,8 +14,7 @@ layout: default
     <a href="{{ nav.url | prepend: site.baseurl }}">{{ nav.name }}</a>
     {% endif %}
     {% endfor %}
-  </nav> -->
-</center>
+  </nav>
 </header>
 
 <div class="list">
