@@ -6,8 +6,9 @@
 name:               "Tejpal Virdi"
 
 author:
-  twitter:          
+  twitter:          tejpalv1
   email:            tejpalv8@gmail.com
+  github:           tejpalv
 
 copyright:
   year:             2017
@@ -52,7 +53,7 @@ nav:
   - name:           "Tags"
     url:            "/tags"
   - name:           "Github"
-    url:            "https://github.com/AWEEKJ/Kiko-plus"
+    url:            "https://github.com/tejpalv"
 
 
 # Sass
