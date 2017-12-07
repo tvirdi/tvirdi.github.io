@@ -86,4 +86,4 @@ Although eigenfaces are a successful method of facial recognition, it is not the
 
 Overall, facial recognition has proved to be a very useful tool in many areas of life. For example facial recognition can be used for security, social media, or targeted advertising. As we rely more and more on sensory technology to help us interact with our surroundings, it is important for us to create better facial recognition systems. 
 
-[github/code](https://github.com/johnguibas/eigenfaces)
+[Java Code](https://github.com/tejpalv/eigenfaces)
