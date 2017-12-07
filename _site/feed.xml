@@ -6,6 +6,40 @@
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
     
       <item>
+        <title>Deep Audio Prior</title>
+        <description>&lt;p&gt;&lt;strong&gt;December 6th 2017&lt;/strong&gt; - Tejpal Virdi&lt;/p&gt;
+
+&lt;h3 id=&quot;introduction&quot;&gt;Introduction&lt;/h3&gt;
+&lt;p&gt;Recently, Ulyanov et. al introduced a paper titled &lt;a href=&quot;https://sites.skoltech.ru/app/data/uploads/sites/25/2017/12/deep_image_prior.pdf&quot;&gt;“Deep Image Prior,”&lt;/a&gt; describing how a great deal of image information can be captured simply by the structure of a convolutional neural network. They use this inherent nature of ConvNets to perform various image restoration problems, where the “prior” is needed to restore the lost information. Rather than learning from a set of images, this technique demonstrates that the CNN itself encapsulates the image. This is notable since most previous attempts to solving problems in single-image super-resolution, denoising, and inpainting all required the use of large datasets or complex algorithms. In this post, we show how this methodology can be used to enhance the quality of noisy audio samples.&lt;/p&gt;
+
+&lt;h3 id=&quot;deep-image-prior&quot;&gt;Deep Image Prior&lt;/h3&gt;
+&lt;p&gt;As briefly mentioned in the introduction, Deep Image Prior utilizes the fact that the generator network itself has the answer to the restoration problem. Thus, the solution set is in the network’s parameters rather than the general image space. This motivates the development of new deep learning architectures that are domain-fitted for improved accuracy. Here are some results from the original paper:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/denoising.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;367px&quot; width=&quot;940px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;audio&quot;&gt;Audio&lt;/h3&gt;
+&lt;p&gt;Audio is commonly generated as a WAV file, which contains the pure signal of the audio. However, since that is extremely dense and large, we must convert it into a representation that would reduce computational expense. Specifically, audio can be visually represented in terms of a spectrogram, which shows the distribution of frequency over time. As an image, it is not lower in dimensionality and we can use a plain old ConvNet to learn from it. (Note: Recurrent Neural Network architectures are more often used with audio since previous states/history tends to have an effect on the current state )&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/spectro.png&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;335px&quot; width=&quot;644px&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;methods-and-results&quot;&gt;Methods and Results&lt;/h3&gt;
+&lt;p&gt;We employ a DCGAN trained on one degraded image. Throughout the training, we sample its outputs. Here are the network’s outputs over ~2000 iterations:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/iter.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;344px&quot; width=&quot;828px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As seen in the figure, the network is initialized with random weights and learns the different features of the degraded image. The network, however, does not learn the noise of the spectrogram so the generated images are of higher quality than the input degraded image, as seen below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/denoi.jpg&quot; alt=&quot;Filters&quot; class=&quot;center-image&quot; height=&quot;304px&quot; width=&quot;467px&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Implementation available &lt;a href=&quot;https://github.com/DmitryUlyanov/deep-image-prior&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Wed, 06 Dec 2017 00:00:00 -0800</pubDate>
+        <link>http://localhost:4000/2017-12-06/deepaudio/</link>
+        <guid isPermaLink="true">http://localhost:4000/2017-12-06/deepaudio/</guid>
+      </item>
+    
+      <item>
         <title>Protecting Privacy with Synthetic Training Data using Dual GANs</title>
         <description>&lt;p&gt;&lt;strong&gt;November 25th 2017&lt;/strong&gt; - Tejpal Virdi&lt;/p&gt;
 
