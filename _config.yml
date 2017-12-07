@@ -48,10 +48,8 @@ kramdown:
 nav:
   - name:           "about"
     url:            "/about"
-  - name:           "Archive"
-    url:            "/archive"
   - name:           "Papers"
-    url:            "/tags"
+    url:            "/papers"
   - name:           "Github"
     url:            "https://github.com/tejpalv"
 
